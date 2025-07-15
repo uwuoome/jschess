@@ -6,7 +6,7 @@ The client is built with Shadcn and Redux. If you want to use just the networkin
 components/p2p-game.jsx
 hook/use-p2p.ts
 ```
-The node server can be found in `services/pairing' 
+The node server can be found in `services/pairing` 
 
 Core communication relies on socket.io and simple-peer and works as follows:
  - The first client sends a web socket request to the pairing server for matchmaking, and is put on a waiting list.

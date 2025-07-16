@@ -9,6 +9,7 @@ type ConnectionProps = {
     myid: string;
     seekingID: string | null;
     onOpponentLeave: Function | undefined | null; 
+    onMessage: Function | undefined | null;
 }
 
 export const WebRTCTask = {
@@ -19,25 +20,29 @@ export const WebRTCTask = {
 export type WebRTCTaskType = typeof WebRTCTask[keyof typeof WebRTCTask];
 
 export type WebRTCMessage = {
-    task: WebRTCTaskType;
+    task: WebRTCTaskType | undefined;
     data: any;
 }
 
-export function useP2P({myid, seekingID, onOpponentLeave}: ConnectionProps) {
+export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: ConnectionProps) {
     const socketRef = useRef<any>(null);      // our socket ref
     const peerRef = useRef<any>(null);        // peer WebRTC Handle
     const peerSocketRef = useRef<any>(null);  // peer socket ref
     const [gameReady, setGameReady] = useState(false);
+    
 
-    const sendMessage = (msg: string | undefined) => {
+    const sendMessage = (msg: string | WebRTCTaskType) => {
         if (peerRef.current && peerRef.current.connected) {
             DEBUG_P2P && console.log("sending", msg); 
-            peerRef.current.send(msg);
+            if(typeof msg == "string"){
+                peerRef.current.send(msg);
+            }else{
+                peerRef.current.send(JSON.stringify(msg));
+            }
         }
     };
 
     // TODO: add window.addEventListener('beforeunload', handleBeforeUnload); to close connections before page lave/reload
-
     function closeConnections(initiator=true){
         DEBUG_P2P && console.log("Cleaning up peer and socket connections");
         // if peer exists tell it you are leaving
@@ -74,14 +79,16 @@ export function useP2P({myid, seekingID, onOpponentLeave}: ConnectionProps) {
                 socketRef.current.emit('signal', { target: peerSocketID, signal });
             });
             peer.on('data', (data) => {
-                const msg = JSON.parse(data);
-                if(msg.task == WebRTCTask.Begin){
+                const str = data.toString();
+                const msg = JSON.parse(str);//typeof data == "object"? str: JSON.parse(str);
+                if(msg?.task == WebRTCTask.Begin){
                     setGameReady(true);
-                }else if(msg.task == WebRTCTask.End){
+                }else if(msg?.task == WebRTCTask.End){
                     closeConnections(false);
                 }else{
-                    console.log('Received:', data.toString());
+                    console.log('Received:', str);
                     // TODO: send to game specific handler
+                    onMessage?.(msg);
                 }
             });
             peer.on('connect', () => {
@@ -98,12 +105,14 @@ export function useP2P({myid, seekingID, onOpponentLeave}: ConnectionProps) {
                     socketRef.current.emit('signal', { target: source, signal });
                 });
                 peer.on('data', (data) => {
-                    const msg = JSON.parse(data);
-                    if(msg.task == WebRTCTask.End){
+                    const str = data.toString();
+                    const msg = JSON.parse(str);//typeof data == "object"? str: JSON.parse(str);
+                    if(msg?.task == WebRTCTask.End){
                         closeConnections(false);    
                     }else{
-                        console.log('Received:', data.toString());
+                        console.log('Received:', str);
                         // TODO: send to game specific handler
+                        onMessage?.(msg);
                     }
                 });
                 peer.on('connect', () => {
@@ -121,13 +130,13 @@ export function useP2P({myid, seekingID, onOpponentLeave}: ConnectionProps) {
         socketRef.current.on('connect', onConnect);
         socketRef.current.on('new-peer', onPeerJoin);
         socketRef.current.on('signal', onSignal);
-
+        window.addEventListener('beforeunload', closeConnections.bind(null, true));
         return closeConnections;
     }, []);
 
     return {
         sendMessage,                                    // sends message to opponent
         leaveGame: closeConnections.bind(null, true),   // for when user closed in UI
-        gameReady                                       // ref signals when p2p connection is ready nd established
+        gameReady,                                      // ref signals when p2p connection is ready nd established
     };
 }

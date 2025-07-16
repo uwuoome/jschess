@@ -5,6 +5,7 @@ import HostSelector from './host-selector.tsx';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/index.ts';
 import { useP2P } from '@/hooks/use-p2p.ts';
+import RockPaperScissors from './rock-paper-scissors.tsx';
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -14,8 +15,9 @@ type ConnectorProps = {
   onCancel: () => void;
 }
 
-function P2PConnector({requesterID, seekingID, onCancel}: ConnectorProps){
-  const {gameReady, leaveGame} = useP2P({myid: requesterID, seekingID, onOpponentLeave});
+export function P2PConnector({requesterID, seekingID, onCancel}: ConnectorProps){
+  const [currentMessage, setCurrentMessage] = useState<any>(null);
+  const {gameReady, leaveGame, sendMessage} = useP2P({myid: requesterID, seekingID, onOpponentLeave, onMessage: setCurrentMessage});
   function onOpponentLeave(){
     alert("Opponent Left");
     onCancel();
@@ -31,7 +33,7 @@ function P2PConnector({requesterID, seekingID, onCancel}: ConnectorProps){
       </div>
   ) : (
       <div>
-        <p>Game Goes Here</p>
+        <RockPaperScissors sendMessage={sendMessage} currentMessage={currentMessage} />
         <Button onClick={onLeave}>Leave</Button>
       </div>
   );
@@ -57,6 +59,7 @@ export default function P2PGame() {
         || 
         <span className="m-2">or enter a valid email address to join a specific player in game.</span>}
       </div>}
+     {/* <RockPaperScissors /> */}
     </>
   );
 };

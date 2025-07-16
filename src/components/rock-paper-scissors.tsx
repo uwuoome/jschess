@@ -1,0 +1,124 @@
+import { Hand, Grab, HandHelping, TriangleAlert, X} from "lucide-react"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useEffect, useRef, useState } from "react";
+import type { WebRTCMessage } from "@/hooks/use-p2p";
+
+
+type TimerProps = {
+    duration: number;   // duration of the countdown timer
+    callback: Function; // runs when the timer ends
+};
+type RockPaperScissorsMove = "r" | "p" | "s" | "x";
+type RockPaperScissorsProps = {
+    sendMessage: Function; // network transmit
+    currentMessage: WebRTCMessage | null;
+}
+
+function CountdownTimer({duration, callback}: TimerProps){
+    const [remaining, setRemaining] = useState<number>(duration);
+    // TODO: get heatscale to work with any duration
+    const heatScale = () => "text-red-"+(1000 - ((Math.floor(duration)-Math.floor(remaining)) * 100));
+    const timeout = useRef<any>(null);
+
+    function ticker(){
+        const start: number = Date.now();
+        function countdown(){
+            const delta = (Date.now()-start) / 1000;
+            const timeLeft = duration- delta;
+            if(timeLeft >= 0){
+                setRemaining(timeLeft);
+            }else{
+                setRemaining(0);
+                clearInterval(timeout.current);
+                typeof callback == "function" && callback();
+            }
+        }
+        timeout.current = setInterval(countdown, 50);
+        return () => clearInterval(timeout.current);
+    }
+
+    useEffect(ticker, []);
+    return (
+        <div className="font-extrabold text-3xl w-32">
+            <span className={heatScale()}> 
+                {remaining.toFixed(2)}
+            </span>
+            <span className="text-l text-gray-500">s</span>
+        </div>
+    );
+}
+
+
+
+export default function RockPaperScissors({sendMessage, currentMessage}: RockPaperScissorsProps){
+    const myMove = useRef<RockPaperScissorsMove | null>(null);
+    const opMove = useRef<RockPaperScissorsMove | null>(null);
+    const [result, setResult] = useState<string>("");
+    
+    function sendMove(){
+        sendMessage({data: myMove.current});
+        if(opMove.current){
+            showResults();
+        }
+    }
+    useEffect(() => {
+        if(! currentMessage) return;
+        opMove.current = currentMessage?.data;
+        if(myMove.current != null){
+            showResults();
+        }  
+    }, [currentMessage]);
+
+    function showResults(){
+        if(myMove.current == opMove.current){
+            setResult("Draw");
+        }else if(myMove.current == "x"){
+            setResult("Lose");
+        }else if(opMove.current == "x"){
+            setResult("Win");
+        }else if(myMove.current == "r"){
+            setResult(opMove.current == "s"? "Win": "Lose");
+        }else if(myMove.current == "p"){
+            setResult(opMove.current == "r"? "Win": "Lose");
+        }else{  // myMove.current == "s"
+            setResult(opMove.current == "p"? "Win": "Lose");
+        }
+    }
+
+    function iconFor(move: RockPaperScissorsMove | null){
+        const MyIcon = move == null? X: {'r': Grab, 'p': Hand, 's': HandHelping, 'x': TriangleAlert}[move];
+        return <MyIcon className="w-8 h-8" strokeWidth={2} />
+    }
+
+    return (
+        <div className="border-1 m-8 p-4">
+            <h1>Rock Paper Scissors</h1>
+            {result? ( 
+            <>
+                <div className="flex">
+                    {iconFor(myMove.current)} <span className="m-2">vs</span> {iconFor(opMove.current)}
+                </div>
+                <div>The result is: You {result}</div>
+            </>
+            ) : (
+            <>
+                <p>Select your move before the timer runs out</p>
+                <div className="flex  items-center">
+                    <CountdownTimer duration={5.0} callback={sendMove} />
+                    <ToggleGroup type="single" onValueChange={(val) => myMove.current = val as RockPaperScissorsMove}>
+                        <ToggleGroupItem value="r" className="h-12 w-12 flex items-center justify-center">
+                            <Grab className="!w-8 !h-8 shrink-0" strokeWidth={2} />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="p" className="h-12 w-12 flex items-center justify-center">
+                            <Hand className="!w-8 !h-8 shrink-0" strokeWidth={2} />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="s" className="h-12 w-12 ">
+                            <HandHelping className="!w-8 !h-8 shrink-0" strokeWidth={2} />
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                </div>
+            </>
+            )}
+        </div>
+    );
+}

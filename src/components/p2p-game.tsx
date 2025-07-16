@@ -19,7 +19,9 @@ export function P2PConnector({requesterID, seekingID, onCancel}: ConnectorProps)
   const [currentMessage, setCurrentMessage] = useState<any>(null);
   const {gameReady, leaveGame, sendMessage} = useP2P({myid: requesterID, seekingID, onOpponentLeave, onMessage: setCurrentMessage});
   function onOpponentLeave(){
-    alert("Opponent Left");
+    // only alert if game is not over
+    console.log(gameReady);
+    if(gameReady < 2) alert("Opponent Left");
     onCancel();
   }
   function onLeave(){
@@ -33,7 +35,7 @@ export function P2PConnector({requesterID, seekingID, onCancel}: ConnectorProps)
       </div>
   ) : (
       <div>
-        <RockPaperScissors sendMessage={sendMessage} currentMessage={currentMessage} />
+        <RockPaperScissors sendMessage={sendMessage} currentMessage={currentMessage}  />
         <Button onClick={onLeave}>Leave</Button>
       </div>
   );

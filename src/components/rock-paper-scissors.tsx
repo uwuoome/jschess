@@ -1,7 +1,7 @@
 import { Hand, Grab, HandHelping, TriangleAlert} from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useEffect, useRef, useState } from "react";
-import type { WebRTCMessage } from "@/hooks/use-p2p";
+import { WebRTCTask, type WebRTCMessage } from "@/hooks/use-p2p";
 
 
 type TimerProps = {
@@ -77,6 +77,7 @@ export default function RockPaperScissors({sendMessage, currentMessage}: RockPap
         }else{  // myMove.current == "s"
             setResult(opMove.current == "p"? "Win": "Lose");
         }
+        sendMessage({task: WebRTCTask.Complete});
     }
 
     function iconFor(move: RockPaperScissorsMove){

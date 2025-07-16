@@ -15,6 +15,7 @@ type ConnectionProps = {
 export const WebRTCTask = {
 	Begin: 'Begin',
     Do: 'Do',
+    Complete: 'Complete',       // when a game is over
     End: 'End',
 };
 export type WebRTCTaskType = typeof WebRTCTask[keyof typeof WebRTCTask];
@@ -28,7 +29,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
     const socketRef = useRef<any>(null);      // our socket ref
     const peerRef = useRef<any>(null);        // peer WebRTC Handle
     const peerSocketRef = useRef<any>(null);  // peer socket ref
-    const [gameReady, setGameReady] = useState(false);
+    const [gameReady, setGameReady] = useState(0);
     
 
     const sendMessage = (msg: string | WebRTCTaskType) => {
@@ -42,11 +43,10 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
         }
     };
 
-    // TODO: add window.addEventListener('beforeunload', handleBeforeUnload); to close connections before page lave/reload
     function closeConnections(initiator=true){
         DEBUG_P2P && console.log("Cleaning up peer and socket connections");
-        // if peer exists tell it you are leaving
-        if(initiator && peerRef.current?.connected){
+        // if a peer exists, and you are the first to disconnect, then tell it you are leaving if the game is not over yet
+        if(initiator && peerRef.current?.connected && gameReady < 2){
             try{
                 peerRef.current.send(JSON.stringify({task: WebRTCTask.End}));
             }catch(error){
@@ -57,6 +57,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
         peerRef.current?.destroy();
         socketRef.current?.removeAllListeners();
         socketRef.current.disconnect();
+        // if in game, or establishing a connection and peer leaves inform the user
         if(!initiator && typeof onOpponentLeave == "function"){
             onOpponentLeave();
         }
@@ -80,10 +81,13 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
             });
             peer.on('data', (data) => {
                 const str = data.toString();
-                const msg = JSON.parse(str);//typeof data == "object"? str: JSON.parse(str);
-                if(msg?.task == WebRTCTask.Begin){
-                    setGameReady(true);
-                }else if(msg?.task == WebRTCTask.End){
+                const msg = JSON.parse(str);
+                if(msg.task == WebRTCTask.Begin){
+                    setGameReady(1);
+                }else if(msg.task == WebRTCTask.Complete){
+                    console.log("GC::::")
+                    setGameReady(2);
+                }else if(msg.task == WebRTCTask.End){
                     closeConnections(false);
                 }else{
                     DEBUG_P2P && console.log('Received:', str);
@@ -105,8 +109,11 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                 });
                 peer.on('data', (data) => {
                     const str = data.toString();
-                    const msg = JSON.parse(str);//typeof data == "object"? str: JSON.parse(str);
-                    if(msg?.task == WebRTCTask.End){
+                    const msg = JSON.parse(str);
+                    if(msg.task == WebRTCTask.Complete){
+                        console.log("GC::::")
+                        setGameReady(2);
+                    }else if(msg?.task == WebRTCTask.End){
                         closeConnections(false);    
                     }else{
                         DEBUG_P2P && console.log('Received:', str);
@@ -116,7 +123,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                 peer.on('connect', () => {
                     DEBUG_P2P && console.log('Peer connected (second peer)');
                     peer.send(JSON.stringify({task: WebRTCTask.Begin}));
-                    setGameReady(true);
+                    setGameReady(1);
                 });
                 peer.signal(signal);
                 peerRef.current = peer;

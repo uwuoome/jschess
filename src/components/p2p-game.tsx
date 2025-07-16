@@ -1,5 +1,5 @@
 // src/components/P2PGame.jsx
-import { useState, type MouseEvent } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import HostSelector from './host-selector.tsx';
 import { useSelector } from 'react-redux';
@@ -59,7 +59,6 @@ export default function P2PGame() {
         || 
         <span className="m-2">or enter a valid email address to join a specific player in game.</span>}
       </div>}
-     {/* <RockPaperScissors /> */}
     </>
   );
 };

@@ -86,8 +86,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                 }else if(msg?.task == WebRTCTask.End){
                     closeConnections(false);
                 }else{
-                    console.log('Received:', str);
-                    // TODO: send to game specific handler
+                    DEBUG_P2P && console.log('Received:', str);
                     onMessage?.(msg);
                 }
             });
@@ -110,8 +109,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                     if(msg?.task == WebRTCTask.End){
                         closeConnections(false);    
                     }else{
-                        console.log('Received:', str);
-                        // TODO: send to game specific handler
+                        DEBUG_P2P && console.log('Received:', str);
                         onMessage?.(msg);
                     }
                 });

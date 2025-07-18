@@ -58,7 +58,7 @@ export default function Friends(){
             </TableHeader>
             <TableBody>
                 {friends.map((f: FriendData) => ( 
-                    <TableRow>
+                    <TableRow key={f.email}>
                         <TableCell>{f.name}</TableCell>
                         <TableCell>{f.email}</TableCell>
                         <TableCell>

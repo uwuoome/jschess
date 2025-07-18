@@ -3,6 +3,7 @@ import { Input } from "./ui/input";
 import { setMyID } from "@/store/friendsSlice";
 import type { RootState } from "@/store";
 import { Label } from "@radix-ui/react-label";
+import Chess from "./chess";
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -24,6 +25,8 @@ export default function Home(){
                     onChange={(e) => updateID(e.target.value)}  /> 
             </div>
             {validEmail && <p>Once your email is set, you can join a game.</p>}
+            
+            <Chess />
         </div>
     );
 }

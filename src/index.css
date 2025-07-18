@@ -182,3 +182,8 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+main{
+  padding: 0;
+  padding-left: 20px;
+}

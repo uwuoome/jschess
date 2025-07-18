@@ -1,5 +1,5 @@
 import { Home, Joystick, Settings, Users } from "lucide-react"
- 
+
 import {
   Sidebar,
   SidebarContent,
@@ -12,28 +12,24 @@ import {
 } from "@/components/ui/sidebar"
  
 // Menu items.
-const items = [
-  {
+const items = [{
     title: "Home",
     url: "/",
     icon: Home,
-  },
-  {
+  }, {
     title: "Friend List",
     url: "/friends",
     icon: Users,
-  },
-  {
-    title: "Game",
+  }, {
+    title: "Rock Paper Scissors",
     url: "/game",
     icon: Joystick,
-  },
-  {
+  },  {
     title: "Settings",
     url: "#",
     icon: Settings,
   },
-]
+];
  
 export function AppSidebar() {
   return (

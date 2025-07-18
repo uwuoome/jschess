@@ -18,6 +18,8 @@ function CountdownTimer({duration, callback}: TimerProps){
     const [remaining, setRemaining] = useState<number>(duration);
     // TODO: get heatscale to work with any duration
     const heatScale = () => "text-red-"+(1000 - ((Math.floor(duration)-Math.floor(remaining)) * 100));
+         //`rgba(${(255 / duration) * (duration-remaining)}, 0, 0, 0)`;
+        //
     const timeout = useRef<any>(null);
 
     function ticker(){
@@ -40,7 +42,7 @@ function CountdownTimer({duration, callback}: TimerProps){
     useEffect(ticker, []);
     return (
         <div className="font-extrabold text-3xl w-32">
-            <span className={heatScale()}> 
+            <span style={{color: heatScale()}}> 
                 {remaining.toFixed(2)}
             </span>
             <span className="text-l text-gray-500">s</span>

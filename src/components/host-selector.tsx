@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/store"
-import type { FriendData } from "@/store/friendsSlice"
+import type { FriendData } from "@/store/settingsSlice"
  
 type Props = {
     onJoin: (email: string) => void;

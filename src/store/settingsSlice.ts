@@ -2,17 +2,19 @@ import { createSlice } from '@reduxjs/toolkit';
 
 
 export type FriendData = {name: string, email: string}
-type FriendListState = {
+type SettingsState = {
     myid: string;
+    game: string;
     list: FriendData[];
 };
-const initialState: FriendListState = {
+const initialState: SettingsState = {
     myid: "",
+    game: "chess",
     list: [],
 };
 
 const SAVE_SLOT = 'friendsList';
-function saveFriendList(state: FriendListState) {
+function saveFriendList(state: SettingsState) {
     try {
         const serialized = JSON.stringify(state);
         localStorage.setItem(SAVE_SLOT, serialized);
@@ -32,14 +34,16 @@ function loadFriendList() {
     }
 }
 
-
-
-const friendsSlice = createSlice({
+const settingsSlice = createSlice({
   name: 'friends',
   initialState: loadFriendList(),
   reducers: {
     setMyID: (state, action) => {
         state.myid = action.payload;
+        saveFriendList(state);
+    },
+    setPreferredGame: (state, action) => {
+        state.game = action.payload;
         saveFriendList(state);
     },
     addFriend: (state, action) => { 
@@ -53,5 +57,5 @@ const friendsSlice = createSlice({
   }
 });
 
-export const { setMyID, addFriend, removeFriend } = friendsSlice.actions;
-export default friendsSlice.reducer;
+export const { setMyID, setPreferredGame, addFriend, removeFriend } = settingsSlice.actions;
+export default settingsSlice.reducer;

@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { addFriend, removeFriend, type FriendData } from "@/store/friendsSlice";
+import { addFriend, removeFriend, type FriendData } from "@/store/settingsSlice";
 import type { RootState } from "@/store";
 
 

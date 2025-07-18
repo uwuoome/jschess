@@ -1,12 +1,12 @@
 
 import { configureStore } from '@reduxjs/toolkit';
-import friendsReducer from './friendsSlice';
-import gameReducer from './gameSlice';
+import friendsReducer from './settingsSlice';
+import chessReducer from './chessSlice';
 
 export const store = configureStore({
   reducer: {
     friends: friendsReducer,
-    game: gameReducer,
+    chess: chessReducer,
   },
 });
 

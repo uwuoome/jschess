@@ -1,28 +1,16 @@
-import { validIndices } from "@/lib/chess-helper";
-import { useState } from "react";
-
-const initialBoard = [
-  "r", "n", "b", "q", "k", "b", "n", "r",
-  "p", "p", "p", "p", "p", "p", "p", "p",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  "P", "P", "P", "P", "P", "P", "P", "P",
-  "R", "N", "B", "Q", "K", "B", "N", "R",
-];
+import { validIndices } from "@/lib/chess-moves";
+import type { RootState } from "@/store";
+import { movePiece, selectPiece } from "@/store/chessSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const DEBUG = 0;
 
-type ChessMove = {
-    piece: string;
-    from: number;
-    options: number[];
-};
 
 function ChessBoard(){
-    const [board, setBoard] = useState(initialBoard);
-    const [selected, setSelected] = useState<ChessMove | null>(null);
+
+    const board = useSelector((state: RootState) => state.chess.board);
+    const selected = useSelector((state: RootState) => state.chess.selected);
+    const dispatch = useDispatch();
 
     function piece(code: string){
         const upper = code.toUpperCase();
@@ -34,25 +22,22 @@ function ChessBoard(){
         if(selected == null){   // select unit
             if(code == " ") return;
             // TODO: check piece is of active player's colour 
-            console.log("Move From", code, index);
-            setSelected({
-                piece: code, 
-                from: index, 
-                options: validIndices(code, index, board)
-            });
+            dispatch(selectPiece({piece: code, from: index}));
         }else{                  // move unit
-            console.log(selected.options);
+            dispatch(movePiece(index));
+            /*
             if(selected.options.includes(index)){
                 console.log("Move To", index);
                 const nextBoard = [...board];
                 nextBoard[selected.from] = " ";
                 // TODO: add any piece taken to a removed list, or it could be inferred from the board
                 nextBoard[index] = selected.piece;
-                setBoard(nextBoard);
+                dispatch(setBoard(nextBoard));
             }else{
                 console.log("Invalid Move");
             }
-            setSelected(null);
+            dispatch(setSelected(null));
+            */
         }
     }
     function getBackground(isBlack:boolean, index:number){
@@ -82,11 +67,23 @@ function ChessBoard(){
         </div>
     );
 }
-//style={selected && selected.from == index?{background: 'green'}:{}} 
-export default function Chess() {
 
-  return (
-    <ChessBoard />
-  );
+function ChessInfo(){
+    const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
+    const turnNumber = useSelector((state: RootState) => state.chess.turnNumber);
+    return (
+        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-129 font-bold">
+            Turn {turnNumber} {activePlayer? "Black": "White"}
+        </div>
+    );
+}
+
+export default function Chess() {
+    return (
+    <>
+        <ChessBoard />
+        <ChessInfo />
+    </>
+    );
 };
 

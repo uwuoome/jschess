@@ -20,7 +20,6 @@ export function P2PConnector({requesterID, seekingID, onCancel}: ConnectorProps)
   const {gameReady, leaveGame, sendMessage} = useP2P({myid: requesterID, seekingID, onOpponentLeave, onMessage: setCurrentMessage});
   function onOpponentLeave(){
     // only alert if game is not over
-    console.log(gameReady);
     if(gameReady < 2) alert("Opponent Left");
     onCancel();
   }

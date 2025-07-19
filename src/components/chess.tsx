@@ -1,5 +1,7 @@
+import { algebraicNotation } from "@/lib/chess-moves";
 import type { RootState } from "@/store";
-import { movePiece, selectPiece } from "@/store/chessSlice";
+import { movePiece, nextTurn, selectPiece } from "@/store/chessSlice";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 
@@ -7,6 +9,7 @@ function ChessBoard(){
 
     const board = useSelector((state: RootState) => state.chess.board);
     const selected = useSelector((state: RootState) => state.chess.selected);
+    const target = useSelector((state: RootState) => state.chess.target);
     const dispatch = useDispatch();
 
     function piece(code: string){
@@ -15,17 +18,28 @@ function ChessBoard(){
         return `${colour}${upper}.svg`;
     }
     function move(index: number){ 
-        dispatch(selected == null? selectPiece(index): movePiece(index));
+        if(selected == null){
+            dispatch( selectPiece(index) );
+        }else{
+            dispatch( movePiece(index) );
+        }
     }
+    useEffect(() => {
+        if(target == null) return () => null;
+        console.log("setting timeout");
+        const timeout = setTimeout( () => dispatch(nextTurn()), 800 );
+        return () => clearTimeout(timeout); 
+    }, [target, dispatch]);
+
     function background(isBlack:boolean, index:number){
         const canMoveTo = selected?.options.includes(index);
         if(canMoveTo){
             const bg = isBlack? "bg-gray-500": "bg-gray-200"
             return `${bg} border-8 border-solid border-blue-200`;
         }   
-        const bg = isBlack? "bg-gray-400": "bg-white"
-        return bg;
+        return isBlack? "bg-gray-400": "bg-white"
     }
+    
     return (
         <div className="grid grid-cols-8 border-2 border-black w-fit select-none">
         {board.map((cell, index) => {
@@ -47,9 +61,17 @@ function ChessBoard(){
 function ChessInfo(){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const turnNumber = useSelector((state: RootState) => state.chess.turnNumber);
+    const selected = useSelector((state: RootState) => state.chess.selected);
+    const target = useSelector((state: RootState) => state.chess.target); 
+
     return (
         <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-129 font-bold">
-            Turn {turnNumber} {activePlayer? "Black": "White"}
+            <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
+                Turn {turnNumber} {activePlayer? "Black": "White"}
+            </span>
+            {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
+                {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
+            </span>}
         </div>
     );
 }

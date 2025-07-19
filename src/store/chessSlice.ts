@@ -12,7 +12,9 @@ export type GameState = {
     inCheck: boolean;
     board: string[];
     selected: null | ChessMove;
+    target: null | number;
     network: boolean;
+    movesMade: [number, number][];
 }
 export type ChessMove = {
     piece: string;
@@ -39,7 +41,9 @@ const initialState: GameState = {
     inCheck: false,
     board: initialBoard,
     selected: null,
+    target: null,
     network: false,
+    movesMade: [],
 }
 
 
@@ -48,6 +52,7 @@ const chessSlice = createSlice({
   initialState,
   reducers: {
     selectPiece: (state, action) => {
+      if(state.selected || state.target) return; 
       if(action.payload != null){
         const piece = state.board[action.payload];
         if(piece == null || piece == " ") return; // no piece given
@@ -60,30 +65,38 @@ const chessSlice = createSlice({
           options: validIndices(piece, action.payload, state.board, boardFlipped)
         };
       }else{
-        state.selected = null; //action.payload;
+        state.selected = null;
       }
     },
     movePiece: (state, action) => {
+      if(state.target != null) return;      // move made, locked out until turn passed 
       const targetIndex = action.payload;
       if(state.selected?.options.includes(targetIndex)){
           const nextBoard = [...state.board];
           nextBoard[state.selected.from] = " ";
           // TODO: add any piece taken to a removed list, or it could be inferred from the board
           nextBoard[targetIndex] = state.selected.piece;
-          state.activePlayer ^= 1;
-          if(state.activePlayer == 0){
-            state.turnNumber += 1;
-          }
-          if(! state.network){ // flip board
-            state.board = chunk(nextBoard, 8).reverse().flat();
-          } else{
-            state.board = nextBoard;
-          }
+          state.target = targetIndex;
+          state.board = nextBoard;
+          state.selected.options = [];
+          state.movesMade.push([state.selected.from, targetIndex]);
+      }else{
+        state.selected = null; 
+      }
+    },
+    nextTurn: (state) => {
+      if(! state.network){ // flip board
+        state.board = chunk(state.board, 8).reverse().flat();
       }
       state.selected = null;
+      state.target = null;
+      state.activePlayer ^= 1;
+      if(state.activePlayer == 0){
+        state.turnNumber += 1;
+      }
     }
   }
 });
 
-export const { selectPiece, movePiece} = chessSlice.actions;
+export const { selectPiece, movePiece, nextTurn} = chessSlice.actions;
 export default chessSlice.reducer;

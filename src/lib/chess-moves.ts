@@ -153,3 +153,9 @@ export function validIndices(code: string, index: number, board: string[], flipp
         default: return [];
     }
 }
+
+export function algebraicNotation(index: number){
+    if(index < 0 || index > 63) return "N/A";
+    const [row, col] = [Math.floor(index / 8),  index % 8];
+    return "abcdefgh"[col]+row;
+}

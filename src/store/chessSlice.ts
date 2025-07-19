@@ -49,13 +49,19 @@ const chessSlice = createSlice({
   reducers: {
     selectPiece: (state, action) => {
       if(action.payload != null){
-        if(action.payload.piece == null || action.payload.piece == " ") return; // no piece given
-        const pieceOwner = action.payload.piece.toLowerCase() == action.payload.piece? 1: 0;
-        if(pieceOwner != state.activePlayer) return;  // piece to move not owned by player                      
-        const boardFlipped = state.network == false && state.activePlayer == 1; 
-        action.payload.options = validIndices(action.payload.piece, action.payload.from, state.board, boardFlipped);
+        const piece = state.board[action.payload];
+        if(piece == null || piece == " ") return; // no piece given
+        const pieceOwner = piece.toLowerCase() == piece? 1: 0;
+        if(pieceOwner != state.activePlayer) return;  // piece to move not owned by player 
+        const boardFlipped = state.network == false && state.activePlayer == 1;  
+        state.selected = {
+          piece,
+          from: action.payload,
+          options: validIndices(piece, action.payload, state.board, boardFlipped)
+        };
+      }else{
+        state.selected = null; //action.payload;
       }
-      state.selected = action.payload;
     },
     movePiece: (state, action) => {
       const targetIndex = action.payload;
@@ -73,7 +79,6 @@ const chessSlice = createSlice({
           } else{
             state.board = nextBoard;
           }
-          // todo: progress to next player's turn
       }
       state.selected = null;
     }

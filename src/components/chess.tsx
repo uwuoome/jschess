@@ -1,9 +1,6 @@
-import { validIndices } from "@/lib/chess-moves";
 import type { RootState } from "@/store";
 import { movePiece, selectPiece } from "@/store/chessSlice";
 import { useDispatch, useSelector } from "react-redux";
-
-const DEBUG = 0;
 
 
 function ChessBoard(){
@@ -17,30 +14,10 @@ function ChessBoard(){
         const colour = code == upper? "W": "B";
         return `${colour}${upper}.svg`;
     }
-
-    function move(code: string, index: number, event: any){ 
-        if(selected == null){   // select unit
-            if(code == " ") return;
-            // TODO: check piece is of active player's colour 
-            dispatch(selectPiece({piece: code, from: index}));
-        }else{                  // move unit
-            dispatch(movePiece(index));
-            /*
-            if(selected.options.includes(index)){
-                console.log("Move To", index);
-                const nextBoard = [...board];
-                nextBoard[selected.from] = " ";
-                // TODO: add any piece taken to a removed list, or it could be inferred from the board
-                nextBoard[index] = selected.piece;
-                dispatch(setBoard(nextBoard));
-            }else{
-                console.log("Invalid Move");
-            }
-            dispatch(setSelected(null));
-            */
-        }
+    function move(index: number){ 
+        dispatch(selected == null? selectPiece(index): movePiece(index));
     }
-    function getBackground(isBlack:boolean, index:number){
+    function background(isBlack:boolean, index:number){
         const canMoveTo = selected?.options.includes(index);
         if(canMoveTo){
             const bg = isBlack? "bg-gray-500": "bg-gray-200"
@@ -55,9 +32,8 @@ function ChessBoard(){
             const isBlack = (Math.floor(index / 8) + (index % 8)) % 2 == 0;
             return (
                 <div key={index} 
-                        className={`w-16 h-16 content-center ${getBackground(isBlack, index)}` } 
-                        onClick={move.bind(null, cell, index)} >
-                    {DEBUG && <span style={{color:"red", fontSize: "10px"}}>{index}</span> || ""}       
+                        className={`w-16 h-16 content-center ${background(isBlack, index)}`} 
+                        onClick={move.bind(null, index)} >    
                     {cell != " " && <img src={`chess/${piece(cell)}`} 
                         className={`${selected?.from == index? "w-12 h-12 ml-2 bg-blue-200": "w-12 h-12 ml-2" }`}
                     />}

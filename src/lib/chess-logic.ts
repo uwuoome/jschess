@@ -1,3 +1,20 @@
+/**
+ * Provides logic for handling games of chess. 
+ * Generates lists of valid moves for given pieces, see: validIndices
+ * Checks for check and checkmate: isInCheck
+ * And converts indices to algebraic notation: algebraicNotation
+ * Board representation is a 64 element array of char codes:
+   const exampleStartingBoard = [
+       "r", "n", "b", "q", "k", "b", "n", "r",
+       "p", "p", "p", "p", "p", "p", "p", "p",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        "P", "P", "P", "P", "P", "P", "P", "P",
+        "R", "N", "B", "Q", "K", "B", "N", "R",
+    ];
+ */
 const EMPTY = " ";
 
 const rowColToIndex = (rc: any[]) => parseInt(rc[0]) * 8 + rc[1];
@@ -21,7 +38,7 @@ function opPiece(irBlack: boolean, row: number, col: number, board: string[], fl
     return irBlack != toTakeIsBlack;
 }
 
-function project(irBlack: boolean, row: number, col: number, board: string[], flipped: boolean, dr: number, dc: number) {
+function project(irBlack: boolean, row: number, col: number, board: string[], flipped: boolean, dr: number, dc: number): number[][] {
     const result = [];
     let r = row + dr;
     let c = col + dc;
@@ -45,13 +62,9 @@ function project(irBlack: boolean, row: number, col: number, board: string[], fl
 
 function kingMoves(irBlack: boolean, row: number, col: number, board: string[], flipped: boolean){
     function validate(rowTo: number, colTo: number){
-        return (!moveIntoCheck(rowTo, colTo)) && (!myPiece(irBlack, rowTo, colTo, board, flipped));
-    }
-    function moveIntoCheck(rowTo: number, colTo: number){
-        return false; // TODO: implement
+        return !myPiece(irBlack, rowTo, colTo, board, flipped); // target isnt an owned piece
     }
     const result = [];
-    console.log(row, col);
     if(row > 0){
         if(col > 0 && validate(row-1, col-1)) result.push([row-1, col-1]);
         if(validate(row-1, col)) result.push([row-1, col]);
@@ -140,6 +153,20 @@ function pawnMoves(irBlack: boolean, row: number, col: number, board: string[], 
  * @return an array of indices coresponding to valid move locations.
  */
 export function validIndices(code: string, index: number, board: string[], flipped: boolean){
+    const ignoringCheckStatus = _validIndices(code, index, board, flipped); 
+    const irBlack = code.toUpperCase() != code; 
+    function notMovingIntoCheck(moveIndex: number){
+        const nextBoard = [...board];
+        nextBoard[index] = EMPTY;
+        nextBoard[moveIndex] = code;
+        const kingIndex = nextBoard.indexOf(irBlack?  "k": "K");
+        const checkFrom: number = pieceThatCanTake(irBlack, nextBoard, flipped, kingIndex);
+        return checkFrom == -1;
+    }
+    return ignoringCheckStatus.filter(notMovingIntoCheck);
+}
+
+function _validIndices(code: string, index: number, board: string[], flipped: boolean){
     const [row, col] = [Math.floor(index / 8), index % 8];
     const upperCode = code.toUpperCase();
     const isBlack = flipped? upperCode == code: upperCode != code;
@@ -154,8 +181,90 @@ export function validIndices(code: string, index: number, board: string[], flipp
     }
 }
 
+/**
+ * @param index Once dimensional index (0 to 63).
+ * @return 2 character representation in standard chess notation, of char (a to h) followed by digit (1 to 8).
+ */
 export function algebraicNotation(index: number){
     if(index < 0 || index > 63) return "N/A";
     const [row, col] = [Math.floor(index / 8),  index % 8];
-    return "abcdefgh"[col]+row;
+    return "abcdefgh"[col]+(row+1);
+}
+
+function openAdjacent(irBlack: boolean, from: number, board: string[]){
+    if(from < 0 || from > 63) return [];
+    const result: number[] = [];
+    const [row, col] = [Math.floor(from / 8), from % 8];
+    function valid(tile: string){
+        if(tile == EMPTY) return true;
+        const pieceIsBlack = tile.toLowerCase() == tile;
+        return pieceIsBlack != irBlack;
+    }
+    if(row > 0){ // scan above
+        if(col > 0 && valid(board[from-7])) result.push(from-7);
+        if(valid(board[from-8])) result.push(from-8);
+        if(col < 7 && valid(board[from-9])) result.push(from-9);  
+    }    
+    if(col > 0 && valid(board[from-1])) result.push(from-1);
+    if(col < 7 && valid(board[from+1])) result.push(from+1);
+    if(row < 7){ // scan below
+        if(col > 0 && valid(board[from+7])) result.push(from+7);
+        if(valid(board[from+8])) result.push(from+8);
+        if(col < 7 && valid(board[from+9])) result.push(from+9);  
+    }   
+    return result;
+}
+
+function pieceThatCanTake(irBlack: boolean, board: string[], flipped: boolean, positionIndex: number){
+    return board.findIndex((piece, i) => {
+        if(piece == EMPTY) return false;          // no piece at tile
+        const pieceIsBlack = piece.toUpperCase() != piece;
+        if(pieceIsBlack == irBlack) return false; // not opponent's
+        const pieceMoves = _validIndices(piece, i, board, flipped);
+        return pieceMoves.includes(positionIndex);
+    });
+}
+
+function allPiecesThatCanTake(irBlack: boolean, board: string[], flipped: boolean, positionIndex: number){
+    return board.reduce((attackers: number[], piece, i) => {
+        if (piece === EMPTY) return attackers;          // no piece at tile
+        const pieceIsBlack = piece.toUpperCase() != piece;
+        if (pieceIsBlack === irBlack) return attackers; // not opponent's
+        // for pawns do I have to flip flipped
+        const moves = _validIndices(piece, i, board, flipped);
+        if (moves.includes(positionIndex)) {
+            attackers.push(i);
+        }
+        return attackers;
+    }, []);
+}
+
+/** 
+ * @param irBlack whether of not the player to test for check is black; false is white.
+ * @param board 64 element array containing board tile state.
+ * @param flipped true if teh board is flipped upside down (from black player's perspective).
+ * @return 0 not in check, 1 check, 2 checkmate.
+ */
+export function isInCheck(irBlack: boolean, board: string[], flipped: boolean) {
+    const kingIndex = board.indexOf(irBlack?  "k": "K");
+    if(kingIndex == -1) throw Error("In Check Error: No King on the board.");
+    const checkFrom = pieceThatCanTake(irBlack, board, flipped, kingIndex);
+    if(checkFrom == -1) return 0;                           // not in check
+    // finding all pieces that can remove the piece causing check
+    const checkRemovedBy = allPiecesThatCanTake(!irBlack, board, flipped, checkFrom); 
+    const canTakePieceToRemoveCheck = checkRemovedBy.some((removedByIndex: number) => {
+        // need to test for double check here, or if the king captures, that he is not moving into check.
+        const newBoard = [...board];
+        newBoard[removedByIndex] = " ";
+        newBoard[checkFrom] = board[removedByIndex];
+        const newCheckFrom = pieceThatCanTake(irBlack, newBoard, flipped, kingIndex);
+        return newCheckFrom == -1;
+    });
+    if(canTakePieceToRemoveCheck) return 1; 
+    // no piece can effectively capture the opponent's piece causing the check, so look if we can move our king
+    const adjacentTiles = openAdjacent(irBlack, kingIndex, board);
+    if(adjacentTiles.length == 0) return 2;                    // in check with no adjacent free tiles.   
+    const checkFromIndices = adjacentTiles.map(pieceThatCanTake.bind(null, irBlack, board, flipped));
+    if(checkFromIndices.includes(-1)) return 1;                // in check but there's an escape tile 
+    return 2;                                                   
 }

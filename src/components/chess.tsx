@@ -1,4 +1,4 @@
-import { algebraicNotation } from "@/lib/chess-moves";
+import { algebraicNotation } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
 import { movePiece, nextTurn, selectPiece } from "@/store/chessSlice";
 import { useEffect } from "react";
@@ -45,12 +45,13 @@ function ChessBoard(){
         {board.map((cell, index) => {
             const isBlack = (Math.floor(index / 8) + (index % 8)) % 2 == 0;
             return (
-                <div key={index} 
-                        className={`w-16 h-16 content-center ${background(isBlack, index)}`} 
-                        onClick={move.bind(null, index)} >    
-                    {cell != " " && <img src={`chess/${piece(cell)}`} 
-                        className={`${selected?.from == index? "w-12 h-12 ml-2 bg-blue-200": "w-12 h-12 ml-2" }`}
-                    />}
+                <div style={{position:"relative"}} key={index}>
+                    <div style={{position:"absolute", top: 0, left: "2px", fontSize: "10px", color:"red"}}>{index}</div>
+                    <div className={`w-16 h-16 content-center ${background(isBlack, index)}`} onClick={move.bind(null, index)}>
+                        {cell != " " && <img src={`chess/${piece(cell)}`} 
+                            className={`${selected?.from == index? "w-12 h-12 ml-2 bg-blue-200": "w-12 h-12 ml-2" }`}
+                        />}
+                    </div>
                 </div>
             );
         })}

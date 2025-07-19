@@ -1,4 +1,4 @@
-import { validIndices } from "@/lib/chess-moves";
+import { isInCheck, validIndices } from "@/lib/chess-logic";
 import { chunk } from "@/lib/utils";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -9,7 +9,7 @@ export type GameState = {
     players: GamePlayers;
     activePlayer: 0 | 1;
     turnNumber: number;
-    inCheck: boolean;
+    inCheck: 0 | 1 | 2; // no | yes | checkmate
     board: string[];
     selected: null | ChessMove;
     target: null | number;
@@ -38,7 +38,7 @@ const initialState: GameState = {
     players: [null, null], // stores socketid for reconnect
     activePlayer: 0,
     turnNumber: 1,
-    inCheck: false,
+    inCheck: 0,
     board: initialBoard,
     selected: null,
     target: null,
@@ -94,6 +94,11 @@ const chessSlice = createSlice({
       if(state.activePlayer == 0){
         state.turnNumber += 1;
       }
+      // test for check or check and check mate
+      const isBlackNext = !!state.activePlayer;
+      const checkState = isInCheck(isBlackNext, state.board, (state.network && isBlackNext));
+      if(checkState == 1) alert("In check");
+      if(checkState == 2) alert("Checkmate");
     }
   }
 });

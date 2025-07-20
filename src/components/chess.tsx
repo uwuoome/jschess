@@ -64,14 +64,18 @@ function ChessInfo(){
     const turnNumber = useSelector((state: RootState) => state.chess.turnNumber);
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target); 
+    const message = useSelector((state: RootState) => state.chess.message);
 
     return (
-        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-129 font-bold">
+        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-129 font-bold select-none">
             <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
                 Turn {turnNumber} {activePlayer? "Black": "White"}
             </span>
             {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
                 {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
+            </span>}
+            {message  && <span className="m-1 pl-2 pr-2 border-solice border-1 border-red-950 rounded-sm bg-red-500 font-bold text-white">
+                {message}
             </span>}
         </div>
     );

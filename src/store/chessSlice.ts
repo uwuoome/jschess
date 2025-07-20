@@ -5,16 +5,16 @@ import { createSlice } from "@reduxjs/toolkit";
 
 export type GamePlayers = [string | null, string | null];
 export type GameState = {
-    status: string;
-    players: GamePlayers;
-    activePlayer: 0 | 1;
-    turnNumber: number;
-    inCheck: 0 | 1 | 2; // no | yes | checkmate
-    board: string[];
-    selected: null | ChessMove;
-    target: null | number;
-    network: boolean;
+    mode: "network" | "hotseat" | "ai";
+    sockets: GamePlayers;             // stores socketid for reconnect
+    activePlayer: 0 | 1 | -1;         // active player index, or -1 to lock out both players
+    turnNumber: number;               // chess turn number
+    inCheck: 0 | 1 | 2;               // no | yes | checkmate
+    board: string[];                  // 64 element char array describing board state
+    selected: null | ChessMove;       // selection made
+    target: null | number;            // target tile to move to after selection 
     movesMade: [number, number][];
+    message: string;                  // message presented to user
 }
 export type ChessMove = {
     piece: string;
@@ -34,16 +34,16 @@ const initialBoard = [
 ];
 
 const initialState: GameState = {
-    status: "none",
-    players: [null, null], // stores socketid for reconnect
+    mode: "hotseat",
+    sockets: [null, null], 
     activePlayer: 0,
     turnNumber: 1,
     inCheck: 0,
     board: initialBoard,
     selected: null,
     target: null,
-    network: false,
     movesMade: [],
+    message: ""
 }
 
 
@@ -53,12 +53,13 @@ const chessSlice = createSlice({
   reducers: {
     selectPiece: (state, action) => {
       if(state.selected || state.target) return; 
+      if(state.activePlayer == -1) return;    
       if(action.payload != null){
         const piece = state.board[action.payload];
         if(piece == null || piece == " ") return; // no piece given
         const pieceOwner = piece.toLowerCase() == piece? 1: 0;
         if(pieceOwner != state.activePlayer) return;  // piece to move not owned by player 
-        const boardFlipped = state.network == false && state.activePlayer == 1;  
+        const boardFlipped = state.mode == "hotseat" && state.activePlayer == 1;  
         state.selected = {
           piece,
           from: action.payload,
@@ -69,7 +70,8 @@ const chessSlice = createSlice({
       }
     },
     movePiece: (state, action) => {
-      if(state.target != null) return;      // move made, locked out until turn passed 
+      if(state.target != null) return;      // move made, locked out until turn passed
+      if(state.activePlayer == -1) return; 
       const targetIndex = action.payload;
       if(state.selected?.options.includes(targetIndex)){
           const nextBoard = [...state.board];
@@ -85,7 +87,7 @@ const chessSlice = createSlice({
       }
     },
     nextTurn: (state) => {
-      if(! state.network){ // flip board
+      if(state.mode == "hotseat"){ // flip board
         state.board = chunk(state.board, 8).reverse().flat();
       }
       state.selected = null;
@@ -96,9 +98,13 @@ const chessSlice = createSlice({
       }
       // test for check or check and check mate
       const isBlackNext = !!state.activePlayer;
-      const checkState = isInCheck(isBlackNext, state.board, (state.network && isBlackNext));
-      if(checkState == 1) alert("In check");
-      if(checkState == 2) alert("Checkmate");
+      const checkState = isInCheck(isBlackNext, state.board, (state.mode == "hotseat" && isBlackNext));
+      if(checkState == 1){
+        state.message = `Your are in Check.`;
+      }else if(checkState == 2){
+        state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
+        state.activePlayer = -1;
+      }
     }
   }
 });

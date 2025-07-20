@@ -145,14 +145,20 @@ function pawnMoves(irBlack: boolean, row: number, col: number, board: string[], 
     return result.map(rowColToIndex);
 }
 
+function homeRow(irBlack:boolean, flipped: boolean) {
+    if(flipped) irBlack? 7: 0;
+    return irBlack? 0: 7;
+}
+
 /**
  * @param code char code of piece to move. K, Q, R, B, N, P or the same in lower case for black pieces.
  * @param index one dimensional board index of piece to move.
  * @param board 64 element array containing board tiles.
  * @param flipped if set, this flag denotes that the board has been turned upside down for black player playing locally.
+ * @param castling whether castling is available: 0 no, 1 left rook only, 2 right rook only, 3 both rooks.
  * @return an array of indices coresponding to valid move locations.
  */
-export function validIndices(code: string, index: number, board: string[], flipped: boolean){
+export function validIndices(code: string, index: number, board: string[], flipped: boolean, castling: 0 | 1 | 2 | 3){
     const ignoringCheckStatus = _validIndices(code, index, board, flipped); 
     const irBlack = code.toUpperCase() != code; 
     function notMovingIntoCheck(moveIndex: number){
@@ -163,7 +169,27 @@ export function validIndices(code: string, index: number, board: string[], flipp
         const checkFrom: number = pieceThatCanTake(irBlack, nextBoard, flipped, kingIndex);
         return checkFrom == -1;
     }
-    return ignoringCheckStatus.filter(notMovingIntoCheck);
+    const result = ignoringCheckStatus.filter(notMovingIntoCheck);
+
+    // check if castling is valid here, and if so add moves to result.
+    if(castling == 0) return result; 
+    const home = homeRow(irBlack, flipped)*8;
+    const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
+    if(castling & 1){                                                          // Neither king nor left rook has moved. 
+        const lhsClear = board.slice(home+1, home+4).join("") == "   ";        // No pieces between the king and rook. 
+        const noMoveThroughCheck = [3, 4, 5].every(castlingNoCheck);           // The king is not in check.                             
+        if(lhsClear && noMoveThroughCheck){                                    // The king cannot move through or into check.
+            result.push(index == home? home+4: home);                  
+        }
+    }
+    if(castling & 2){                                                          // Neither king nor right rook has moved.                         
+        const rhsClear = board.slice(home+5, home+7).join("") == "  ";
+        const noMoveThroughCheck = [5, 6, 7].every(castlingNoCheck);
+        if(rhsClear && noMoveThroughCheck){
+            result.push(index == home+7? home+4: home+7); 
+        }           
+    }
+    return result;
 }
 
 function _validIndices(code: string, index: number, board: string[], flipped: boolean){
@@ -243,6 +269,7 @@ function allPiecesThatCanTake(irBlack: boolean, board: string[], flipped: boolea
  * @param irBlack whether of not the player to test for check is black; false is white.
  * @param board 64 element array containing board tile state.
  * @param flipped true if teh board is flipped upside down (from black player's perspective).
+ * @param castling whether castling is available: 0 no, 1 left rook only, 2 right rook only, 3 both rooks.
  * @return 0 not in check, 1 check, 2 checkmate.
  */
 export function isInCheck(irBlack: boolean, board: string[], flipped: boolean) {

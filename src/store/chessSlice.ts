@@ -3,24 +3,30 @@ import { chunk } from "@/lib/utils";
 import { createSlice } from "@reduxjs/toolkit";
 
 
-export type GamePlayers = [string | null, string | null];
+export type GamePlayer = {
+  name: string,                      // player name
+  socket: number | null,             // stores socketid for reconnect
+  castling: CastlingAvailability,    // if rooks or king has moved to determine if castling is possible
+}; 
 export type GameState = {
-    mode: "network" | "hotseat" | "ai";
-    sockets: GamePlayers;             // stores socketid for reconnect
-    activePlayer: 0 | 1 | -1;         // active player index, or -1 to lock out both players
-    turnNumber: number;               // chess turn number
-    inCheck: 0 | 1 | 2;               // no | yes | checkmate
-    board: string[];                  // 64 element char array describing board state
-    selected: null | ChessMove;       // selection made
-    target: null | number;            // target tile to move to after selection 
-    movesMade: [number, number][];
-    message: string;                  // message presented to user
+    mode: "network" | "hotseat" | "ai";   // basic game mode / opponent type
+    players: [GamePlayer, GamePlayer];    // player specific info           
+    activePlayer: 0 | 1 | -1;             // active player index, or -1 to lock out both players
+    turnNumber: number;                   // chess turn number
+    inCheck: 0 | 1 | 2;                   // no | yes | checkmate
+    board: string[];                      // 64 element char array describing board state
+    selected: null | ChessMove;           // selection made
+    target: null | number;                // target tile to move to after selection 
+    movesMade: [number, number][];        // log of moves made, for replay or history browsing
+    message: string;                      // message presented to user
 }
 export type ChessMove = {
     piece: string;
     from: number;
     options: number[];
 };
+
+export type CastlingAvailability = 0 | 1 | 2 | 3; // none, left only, right only, both
 
 const initialBoard = [
   "r", "n", "b", "q", "k", "b", "n", "r",
@@ -35,7 +41,15 @@ const initialBoard = [
 
 const initialState: GameState = {
     mode: "hotseat",
-    sockets: [null, null], 
+    players: [{
+      name: "Player 1",
+      socket: null,
+      castling: 3
+    }, {
+      name: "Player 2",
+      socket: null,
+      castling: 3
+    }],
     activePlayer: 0,
     turnNumber: 1,
     inCheck: 0,
@@ -46,6 +60,53 @@ const initialState: GameState = {
     message: ""
 }
 
+// Only called when completing a move. Checks if a rook or the king has moved, and if so logs the action.
+// If the move to perform is castling, it performs the move too, and returns true signalling the board update.
+function castling(state: GameState, target: number){
+  if(state.activePlayer == -1 || state.selected == null || target == null){
+    throw new Error("Invalid state for castling");
+  }
+  // affect future castling potential
+  const getHomeRow = (irBlack:boolean, mode: string) => {
+      if(mode == "hotseat") irBlack? 7: 0;
+      return irBlack? 0: 7;
+  }
+  const homeRow = getHomeRow(state.activePlayer == 1, state.mode);
+  const moveFrom = state.selected?.from;
+  if(moveFrom == null) return; 
+  const [row, col] = [Math.floor(moveFrom / 8), moveFrom % 8];
+  if(row != homeRow) return;
+  if(col == 4){
+    state.players[state.activePlayer].castling = 0;  // no castling
+  }else if(col == 0){
+    state.players[state.activePlayer].castling &= 2; // turn off the 1 bit for lhs
+  }else if(col == 7){
+    state.players[state.activePlayer].castling &= 1; // turn off the 2 bit for rhs
+  }
+
+  // perform castling if that is the move 
+  const home = homeRow * 8;
+  const [lrook, king, rrook] = [home, home+4, home+7];
+  if((state.selected.from == lrook && target == king) || (state.selected.from == king && target == lrook)){
+    const nextBoard = [...state.board];
+    nextBoard[king-1] = nextBoard[lrook];
+    nextBoard[king-2] = nextBoard[king];
+    nextBoard[king] = " ";
+    nextBoard[lrook] = " ";
+    state.board = nextBoard;
+    return true;
+  }
+  if((state.selected.from == rrook && target == king) || (state.selected.from == king && target == rrook)){
+    const nextBoard = [...state.board];
+    nextBoard[king+1] = nextBoard[rrook];
+    nextBoard[king+2] = nextBoard[king];
+    nextBoard[king] = " ";
+    nextBoard[rrook] = " ";
+    state.board = nextBoard;
+    return true;
+  }
+  return false;
+}
 
 const chessSlice = createSlice({
   name: 'game',
@@ -60,10 +121,11 @@ const chessSlice = createSlice({
         const pieceOwner = piece.toLowerCase() == piece? 1: 0;
         if(pieceOwner != state.activePlayer) return;  // piece to move not owned by player 
         const boardFlipped = state.mode == "hotseat" && state.activePlayer == 1;  
+        const castling = state.players[state.activePlayer].castling;
         state.selected = {
           piece,
           from: action.payload,
-          options: validIndices(piece, action.payload, state.board, boardFlipped)
+          options: validIndices(piece, action.payload, state.board, boardFlipped, castling)
         };
       }else{
         state.selected = null;
@@ -74,12 +136,15 @@ const chessSlice = createSlice({
       if(state.activePlayer == -1) return; 
       const targetIndex = action.payload;
       if(state.selected?.options.includes(targetIndex)){
-          const nextBoard = [...state.board];
-          nextBoard[state.selected.from] = " ";
-          // TODO: add any piece taken to a removed list, or it could be inferred from the board
-          nextBoard[targetIndex] = state.selected.piece;
+          if(! castling(state, targetIndex) ) {
+            const nextBoard = [...state.board];
+            nextBoard[state.selected.from] = " ";
+            // TODO: add any piece taken to a removed list, or it could be inferred from the board
+            // if castling
+            nextBoard[targetIndex] = state.selected.piece;
+            state.board = nextBoard;
+          }  
           state.target = targetIndex;
-          state.board = nextBoard;
           state.selected.options = [];
           state.movesMade.push([state.selected.from, targetIndex]);
       }else{
@@ -98,7 +163,8 @@ const chessSlice = createSlice({
       }
       // test for check or check and check mate
       const isBlackNext = !!state.activePlayer;
-      const checkState = isInCheck(isBlackNext, state.board, (state.mode == "hotseat" && isBlackNext));
+      const flipped = (state.mode == "hotseat" && isBlackNext);
+      const checkState = isInCheck(isBlackNext, state.board, flipped);
       if(checkState == 1){
         state.message = `Your are in Check.`;
       }else if(checkState == 2){

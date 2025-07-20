@@ -34,10 +34,10 @@ function ChessBoard(){
     function background(isBlack:boolean, index:number){
         const canMoveTo = selected?.options.includes(index);
         if(canMoveTo){
-            const bg = isBlack? "bg-gray-500": "bg-gray-200"
+            const bg = isBlack? "bg-gray-200": "bg-gray-500"
             return `${bg} border-8 border-solid border-blue-200`;
         }   
-        return isBlack? "bg-gray-400": "bg-white"
+        return isBlack? "bg-white": "bg-gray-400"
     }
     
     return (

@@ -173,6 +173,7 @@ export function validIndices(code: string, index: number, board: string[], flipp
 
     // check if castling is valid here, and if so add moves to result.
     if(castling == 0) return result; 
+    if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) ) return result;
     const home = homeRow(irBlack, flipped)*8;
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
     if(castling & 1){                                                          // Neither king nor left rook has moved. 
@@ -274,7 +275,7 @@ function allPiecesThatCanTake(irBlack: boolean, board: string[], flipped: boolea
  */
 export function isInCheck(irBlack: boolean, board: string[], flipped: boolean) {
     const kingIndex = board.indexOf(irBlack?  "k": "K");
-    if(kingIndex == -1) throw Error("In Check Error: No King on the board.");
+    if(kingIndex == -1) return 0;
     const checkFrom = pieceThatCanTake(irBlack, board, flipped, kingIndex);
     if(checkFrom == -1) return 0;                           // not in check
     // finding all pieces that can remove the piece causing check

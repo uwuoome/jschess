@@ -60,17 +60,19 @@ const initialState: GameState = {
     message: ""
 }
 
+const getHomeRow = (irBlack:boolean, mode: string) => {
+    if(mode == "hotseat") irBlack? 7: 0;
+    return irBlack? 0: 7;
+}
+
 // Only called when completing a move. Checks if a rook or the king has moved, and if so logs the action.
 // If the move to perform is castling, it performs the move too, and returns true signalling the board update.
 function castling(state: GameState, target: number){
   if(state.activePlayer == -1 || state.selected == null || target == null){
     throw new Error("Invalid state for castling");
   }
+  const castlingAvailable = state.players[state.activePlayer].castling;
   // affect future castling potential
-  const getHomeRow = (irBlack:boolean, mode: string) => {
-      if(mode == "hotseat") irBlack? 7: 0;
-      return irBlack? 0: 7;
-  }
   const homeRow = getHomeRow(state.activePlayer == 1, state.mode);
   const moveFrom = state.selected?.from;
   if(moveFrom == null) return; 
@@ -88,24 +90,40 @@ function castling(state: GameState, target: number){
   const home = homeRow * 8;
   const [lrook, king, rrook] = [home, home+4, home+7];
   if((state.selected.from == lrook && target == king) || (state.selected.from == king && target == lrook)){
-    const nextBoard = [...state.board];
-    nextBoard[king-1] = nextBoard[lrook];
-    nextBoard[king-2] = nextBoard[king];
-    nextBoard[king] = " ";
-    nextBoard[lrook] = " ";
-    state.board = nextBoard;
-    return true;
-  }
-  if((state.selected.from == rrook && target == king) || (state.selected.from == king && target == rrook)){
-    const nextBoard = [...state.board];
-    nextBoard[king+1] = nextBoard[rrook];
-    nextBoard[king+2] = nextBoard[king];
-    nextBoard[king] = " ";
-    nextBoard[rrook] = " ";
-    state.board = nextBoard;
-    return true;
+    if(castlingAvailable & 1){  
+      const nextBoard = [...state.board];
+      nextBoard[king-1] = nextBoard[lrook];
+      nextBoard[king-2] = nextBoard[king];
+      nextBoard[king] = " ";
+      nextBoard[lrook] = " ";
+      state.board = nextBoard;
+      return true;
+    }
+  }else if((state.selected.from == rrook && target == king) || (state.selected.from == king && target == rrook)){
+    if(castlingAvailable & 2){  
+      const nextBoard = [...state.board];
+      nextBoard[king+1] = nextBoard[rrook];
+      nextBoard[king+2] = nextBoard[king];
+      nextBoard[king] = " ";
+      nextBoard[rrook] = " ";
+      state.board = nextBoard;
+      return true;
+    }
   }
   return false;
+}
+
+// returns the piece passed in, unless it is a pawn that has reached the last row, in which case it becomes a queen
+// TODO: will we need selection? The unit could also become a knight, rook or bishop.
+// TODO: this can be moved into logic, conbvert mode to flipped in that
+function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
+  if(piece.toUpperCase() != "P") return piece;
+  const homeRow = getHomeRow(player == 1, mode);
+  const row = Math.floor(moveTo / 8);
+  const moveRow = (mode == "hotseat" &&  player == 1)? 7-row : row;
+  if(homeRow == 7 && moveRow == 0) return player == 0? "Q": "q";
+  if(homeRow == 0 && moveRow == 7) return player == 0? "Q": "q";
+  return piece;
 }
 
 const chessSlice = createSlice({
@@ -140,8 +158,7 @@ const chessSlice = createSlice({
             const nextBoard = [...state.board];
             nextBoard[state.selected.from] = " ";
             // TODO: add any piece taken to a removed list, or it could be inferred from the board
-            // if castling
-            nextBoard[targetIndex] = state.selected.piece;
+            nextBoard[targetIndex] = promotion(state.activePlayer, state.selected.piece, targetIndex, state.mode);
             state.board = nextBoard;
           }  
           state.target = targetIndex;

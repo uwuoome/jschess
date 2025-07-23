@@ -174,9 +174,9 @@ export function validIndices(code: string, index: number, board: string[], flipp
 
     // check if castling is valid here, and if so add moves to result.
     if(castling == 0) return result; 
-    if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) == -1) return result;  // no king
+    if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) == -1) return result;  // no king on board
+    if(code != (irBlack? "r" : "R") && code != (irBlack? "k" : "K") ) return result;    // not king or rook selected
     const home = homeRow(irBlack, flipped)*8;
-    
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
     if(castling & 1){                                                          // Neither king nor left rook has moved. 
         const lhsClear = board.slice(home+1, home+4).join("") == "   ";        // No pieces between the king and rook. 

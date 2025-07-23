@@ -2,6 +2,7 @@ import type { WebRTCMessage } from "@/hooks/use-p2p";
 import { algebraicNotation } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
 import { movePiece, nextTurn, opponentMove, selectPiece, setModeAndPlayerNumber } from "@/store/chessSlice";
+import React from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -11,6 +12,8 @@ export type ChessProps = {
     sendMessage?: (msg: WebRTCMessage) => void;// network transmit only for network mode
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
+
+const DEBUG = 0;
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -75,6 +78,69 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         return isBlack? "bg-white": "bg-gray-400"
     }
 
+    const isFlipped = (mode == "hotseat" && activePlayer == 1) || (mode == "network" && myPlayerNumber == 1);
+    const files = isFlipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
+    const ranks = isFlipped ? ["1","2","3","4","5","6","7","8"] : ["8","7","6","5","4","3","2","1"];
+
+return (
+  <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
+    <div />
+    {files.map((file, i) => (
+      <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
+        {file}
+      </div>
+    ))}
+    <div />
+
+    {ranks.map((rank, rowIndex) => (
+      <React.Fragment key={`row-${rowIndex}`}>
+        <div className="flex items-center justify-center text-xs font-semibold p-1">
+          {rank}
+        </div>
+
+        {files.map((_, colIndex) => {
+          const row = rowIndex; //isFlipped ? rowIndex : 7 - rowIndex;
+          const col = colIndex;//isFlipped ? 7 - colIndex : colIndex;
+          const index = row * 8 + col;
+          const isBackgroundBlack = (row + col) % 2 === 1;
+          const tileIndex = isFlipped ? index : ( (7 - Math.floor(index / 8)) * 8 + (index % 8));
+
+          return (
+            <div style={{ position: "relative" }} key={index}>
+
+                {DEBUG && ( <>
+                <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
+                {tileIndex}
+                </div>
+                <div style={{ position: "absolute", top: 0, right: "2px", fontSize: "10px", color: "red" }}>
+                {algebraicNotation(tileIndex)}
+                </div>
+                </>) || ""}
+
+                <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
+                {board[index] !== " " && (
+                    <img src={`chess/${piece(board[index])}`} className={`w-12 h-12 ml-2 ${selected?.from === index ? "bg-blue-200" : ""}`}
+                    />
+                )}
+                </div>
+            </div>
+          );
+        })}
+        <div className="flex items-center justify-center text-xs font-semibold p-1">
+          {rank}
+        </div>
+      </React.Fragment>
+    ))}
+    <div />
+    {files.map((file, i) => (
+      <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
+        {file}
+      </div>
+    ))}
+    <div />
+  </div>
+);
+/*
     return (
         <div className="grid grid-cols-8 border-2 border-black w-fit select-none">
         {board.map((cell, index) => {
@@ -99,6 +165,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         })}
         </div>
     );
+*/
 }
 
 function ChessInfo(){
@@ -108,9 +175,10 @@ function ChessInfo(){
     const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
 
+    const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     return (
         <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-129 font-bold select-none">
-            <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
+            <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
                 Turn {turnNumber} {activePlayer? "Black": "White"}
             </span>
             {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">

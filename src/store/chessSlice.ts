@@ -41,7 +41,7 @@ const initialBoard = [
 ];*/
 
 const initialBoard = [
-  "r", "n", "b", "q", "k", "b", "n", "r",
+  "r", "n", "b", "q", "k", " ", " ", "r",
   "p", "p", "p", "p", "p", "p", "p", "p",
   " ", " ", " ", " ", " ", " ", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
@@ -188,7 +188,8 @@ const chessSlice = createSlice({
         if(piece == null || piece == " ") return; // no piece given
         const pieceOwner = piece.toLowerCase() == piece? 1: 0;
         if(pieceOwner != state.activePlayer) return;  // piece to move not owned by player 
-        const boardFlipped = state.mode == "hotseat" && state.activePlayer == 1;  
+        const boardFlipped = (state.mode == "hotseat" && state.activePlayer == 1) || 
+                             (state.mode == "network" && state.myPlayer == 1);  
         const castling = state.players[state.activePlayer].castling;
         state.selected = {
           piece,
@@ -227,7 +228,7 @@ const chessSlice = createSlice({
       if(move == null){
         throw Error("Invalid move: "+action.payload);
       }
-      let [from, to, extra] = move;
+      let [from, to, extra] = move as [number, number, string];
       if(state.myPlayer == 1){
         from = (7 - Math.floor(from / 8))*8+(from % 8);
         to = (7 - Math.floor(to / 8))*8+(to % 8);

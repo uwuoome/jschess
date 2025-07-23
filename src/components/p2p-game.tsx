@@ -56,7 +56,7 @@ export default function P2PGame({game}: P2PGameProps) {
   const myid = useSelector((state: RootState) => state.friends.myid);
   return (
     <>
-      <h1 className="mb-4">{Game.name}</h1>
+      {/*<h1 className="mb-4">{Game.name}</h1>*/}
       {seeking  &&
         <P2PConnector game={Game} requesterID={myid} seekingID={seeking} onCancel={() => setSeeking(null)} />
       || 

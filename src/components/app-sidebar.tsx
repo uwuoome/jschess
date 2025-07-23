@@ -1,4 +1,5 @@
 import { Home, Joystick, Settings, Users } from "lucide-react"
+import WhiteRook from '@/assets/WR.svg?react';
 
 import {
   Sidebar,
@@ -22,8 +23,12 @@ const items = [{
     icon: Users,
   }, {
     title: "Rock Paper Scissors",
-    url: "/game",
+    url: "/rps",
     icon: Joystick,
+  }, {
+    title: "Chess",
+    url: "/chess",
+    icon: WhiteRook,
   },  {
     title: "Settings",
     url: "#",

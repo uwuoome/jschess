@@ -8,6 +8,8 @@ import Home from "@/components/home"
 import Friends from "@/components/friends"
 import P2PGame from "@/components/p2p-game"
 import { Provider } from 'react-redux';
+import RockPaperScissors from './components/rock-paper-scissors';
+import Chess from './components/chess';
 
 function App() {
   return (
@@ -20,7 +22,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/friends" element={<Friends />} />
-              <Route path="/game" element={<P2PGame />} />
+              <Route path="/rps" element={<P2PGame game={RockPaperScissors} />} />
+              <Route path="/chess" element={<P2PGame game={Chess} />} />
             </Routes>
           </main>
         </SidebarProvider>

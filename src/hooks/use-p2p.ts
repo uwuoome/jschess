@@ -10,6 +10,8 @@ type ConnectionProps = {
     seekingID: string | null;
     onOpponentLeave: Function | undefined | null; 
     onMessage: Function | undefined | null;
+    onInit?: Function; 
+    onRespond?: Function;
 }
 
 export const WebRTCTask = {
@@ -21,11 +23,11 @@ export const WebRTCTask = {
 export type WebRTCTaskType = typeof WebRTCTask[keyof typeof WebRTCTask];
 
 export type WebRTCMessage = {
-    task: WebRTCTaskType | undefined;
+    task?: WebRTCTaskType;
     data: any;
 }
 
-export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: ConnectionProps) {
+export function useP2P({myid, seekingID, onOpponentLeave, onMessage, onInit, onRespond}: ConnectionProps) {
     const socketRef = useRef<any>(null);      // our socket ref
     const peerRef = useRef<any>(null);        // peer WebRTC Handle
     const peerSocketRef = useRef<any>(null);  // peer socket ref
@@ -46,7 +48,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
     function closeConnections(initiator=true){
         DEBUG_P2P && console.log("Cleaning up peer and socket connections");
         // if a peer exists, and you are the first to disconnect, then tell it you are leaving if the game is not over yet
-        if(initiator && peerRef.current?.connected && gameReady < 2){
+        if(initiator && peerRef.current?.connected && gameReady != -1){
             try{
                 peerRef.current.send(JSON.stringify({task: WebRTCTask.End}));
             }catch(error){
@@ -85,8 +87,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                 if(msg.task == WebRTCTask.Begin){
                     setGameReady(1);
                 }else if(msg.task == WebRTCTask.Complete){
-                    console.log("GC::::")
-                    setGameReady(2);
+                    setGameReady(-1);
                 }else if(msg.task == WebRTCTask.End){
                     closeConnections(false);
                 }else{
@@ -96,6 +97,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
             });
             peer.on('connect', () => {
                 DEBUG_P2P && console.log('Peer connected (first peer)');
+                typeof onInit == "function" && onInit();
             });
             peerRef.current = peer;
         }
@@ -111,8 +113,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                     const str = data.toString();
                     const msg = JSON.parse(str);
                     if(msg.task == WebRTCTask.Complete){
-                        console.log("GC::::")
-                        setGameReady(2);
+                        setGameReady(-1);
                     }else if(msg?.task == WebRTCTask.End){
                         closeConnections(false);    
                     }else{
@@ -123,7 +124,8 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage}: Connection
                 peer.on('connect', () => {
                     DEBUG_P2P && console.log('Peer connected (second peer)');
                     peer.send(JSON.stringify({task: WebRTCTask.Begin}));
-                    setGameReady(1);
+                    typeof onRespond == "function" && onRespond();
+                    setGameReady(2);
                 });
                 peer.signal(signal);
                 peerRef.current = peer;

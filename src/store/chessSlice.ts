@@ -1,4 +1,4 @@
-import { isInCheck, validIndices } from "@/lib/chess-logic";
+import { isInCheck, parseMove, validIndices } from "@/lib/chess-logic";
 import { chunk } from "@/lib/utils";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -10,7 +10,8 @@ export type GamePlayer = {
 }; 
 export type GameState = {
     mode: "network" | "hotseat" | "ai";   // basic game mode / opponent type
-    players: [GamePlayer, GamePlayer];    // player specific info           
+    players: [GamePlayer, GamePlayer];    // player specific info        
+    myPlayer: 0 | 1;                      // player ID  (not used in hotseat games)   
     activePlayer: 0 | 1 | -1;             // active player index, or -1 to lock out both players
     turnNumber: number;                   // chess turn number
     inCheck: 0 | 1 | 2;                   // no | yes | checkmate
@@ -27,7 +28,7 @@ export type ChessMove = {
 };
 
 export type CastlingAvailability = 0 | 1 | 2 | 3; // none, left only, right only, both
-
+/*
 const initialBoard = [
   "r", "n", "b", "q", "k", "b", "n", "r",
   "p", "p", "p", "p", "p", "p", "p", "p",
@@ -37,7 +38,19 @@ const initialBoard = [
   " ", " ", " ", " ", " ", " ", " ", " ",
   "P", "P", "P", "P", "P", "P", "P", "P",
   "R", "N", "B", "Q", "K", "B", "N", "R",
+];*/
+
+const initialBoard = [
+  "r", "n", "b", "q", "k", "b", "n", "r",
+  "p", "p", "p", "p", "p", "p", "p", "p",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  "P", "P", "P", "P", "P", "P", "P", "P",
+  "R", " ", " ", " ", "K", "B", "N", "R",
 ];
+
 
 const initialState: GameState = {
     mode: "hotseat",
@@ -50,6 +63,7 @@ const initialState: GameState = {
       socket: null,
       castling: 3
     }],
+    myPlayer: 0,
     activePlayer: 0,
     turnNumber: 1,
     inCheck: 0,
@@ -126,10 +140,46 @@ function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
   return piece;
 }
 
+function endTurn(state: GameState){
+  if(state.mode == "hotseat"){ // flip board
+    state.board = chunk(state.board, 8).reverse().flat();
+  }
+  state.selected = null;
+  state.target = null;
+  state.activePlayer ^= 1;
+  if(state.activePlayer == 0){
+    state.turnNumber += 1;
+  }
+  // test for check or check and check mate
+  const isBlackNext = !!state.activePlayer;
+  const flipped = (state.mode == "hotseat" && isBlackNext) || state.myPlayer == 1;
+  const checkState = isInCheck(isBlackNext, state.board, flipped);
+  if(checkState == 1){
+    state.message = `You are in Check.`;
+  }else if(checkState == 2){
+    state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
+    state.activePlayer = -1;
+  }
+}
+
 const chessSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
+    setModeAndPlayerNumber: (state, action) => {
+      const {mode, player} = action.payload;
+      if(! ["network", "hotseat", "ai"].includes(mode)){
+        throw Error("Invalid Game Mode: "+mode+" (value must be network, hotseat or ai)");
+      }
+      if(! [0, 1].includes(player)){
+        throw Error("Invalid Player: "+player+" (value must be 0 or 1)");
+      }
+      state.mode = mode;
+      state.myPlayer = player;
+      if(player == 1){
+        state.board = chunk(state.board, 8).reverse().flat();
+      }
+    },
     selectPiece: (state, action) => {
       if(state.selected || state.target) return; 
       if(state.activePlayer == -1) return;    
@@ -168,19 +218,35 @@ const chessSlice = createSlice({
         state.selected = null; 
       }
     },
-    nextTurn: (state) => {
-      if(state.mode == "hotseat"){ // flip board
-        state.board = chunk(state.board, 8).reverse().flat();
+    nextTurn: endTurn,
+    opponentMove: (state, action) =>{
+      if((!action.payload) || action.payload == "0000"){
+        return endTurn(state);
       }
-      state.selected = null;
-      state.target = null;
+      const move = parseMove(action.payload, state.myPlayer == 1);
+      if(move == null){
+        throw Error("Invalid move: "+action.payload);
+      }
+      let [from, to, extra] = move;
+      if(state.myPlayer == 1){
+        from = (7 - Math.floor(from / 8))*8+(from % 8);
+        to = (7 - Math.floor(to / 8))*8+(to % 8);
+      }
+      const opponentIsBlack = state.myPlayer == 0;
+      const opponentQueen = opponentIsBlack? "q": "Q";
+      // check for castling
+      const nextBoard = [...state.board];
+      const moving = nextBoard[from as number];
+      nextBoard[from as number] = " ";
+      nextBoard[to as number] = extra == "p"? opponentQueen: moving;
+      state.board = nextBoard;
       state.activePlayer ^= 1;
       if(state.activePlayer == 0){
         state.turnNumber += 1;
       }
       // test for check or check and check mate
       const isBlackNext = !!state.activePlayer;
-      const flipped = (state.mode == "hotseat" && isBlackNext);
+      const flipped = (state.mode == "hotseat" && isBlackNext) || state.myPlayer == 1;
       const checkState = isInCheck(isBlackNext, state.board, flipped);
       if(checkState == 1){
         state.message = `Your are in Check.`;
@@ -192,5 +258,5 @@ const chessSlice = createSlice({
   }
 });
 
-export const { selectPiece, movePiece, nextTurn} = chessSlice.actions;
+export const { setModeAndPlayerNumber, selectPiece, movePiece, nextTurn, opponentMove} = chessSlice.actions;
 export default chessSlice.reducer;

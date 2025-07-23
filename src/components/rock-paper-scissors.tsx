@@ -89,7 +89,6 @@ export default function RockPaperScissors({sendMessage, currentMessage}: RockPap
 
     return (
         <div className="border-1 m-8 p-4">
-            <h1>Rock Paper Scissors</h1>
             {result? ( 
             <>
                 <div className="flex">

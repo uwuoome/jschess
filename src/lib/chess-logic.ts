@@ -1,3 +1,4 @@
+
 /**
  * Provides logic for handling games of chess. 
  * Generates lists of valid moves for given pieces, see: validIndices
@@ -173,8 +174,9 @@ export function validIndices(code: string, index: number, board: string[], flipp
 
     // check if castling is valid here, and if so add moves to result.
     if(castling == 0) return result; 
-    if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) == -1) return result;
+    if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) == -1) return result;  // no king
     const home = homeRow(irBlack, flipped)*8;
+    
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
     if(castling & 1){                                                          // Neither king nor left rook has moved. 
         const lhsClear = board.slice(home+1, home+4).join("") == "   ";        // No pieces between the king and rook. 
@@ -216,6 +218,24 @@ export function algebraicNotation(index: number){
     if(index < 0 || index > 63) return "N/A";
     const [row, col] = [Math.floor(index / 8),  index % 8];
     return "abcdefgh"[col]+(row+1);
+}
+
+/**
+ * @param algebraic notation string to convert to move in UCI format eg: e1d2 or b1a1q
+ * @return [fromIndex, toIndex, extraInfo] 3 element array. From and to indicies are 0 to 63 derived from the 
+ * first 4 characters. Extra info is anything tacked on after.  
+ */
+export function parseMove(algebraic: string, flipped: boolean){
+    if(algebraic.length < 4) return null;
+    const rl: Record<'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h', number> = {
+        'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7
+    };
+    const fr = parseInt(algebraic[1]) -1;
+    const from = (flipped? fr: 7-fr) * 8 + (rl[algebraic[0]  as keyof typeof rl]);
+    const tr = parseInt(algebraic[3]) -1
+    const to =   (flipped? tr: 7-tr) * 8 + (rl[algebraic[2]  as keyof typeof rl]);
+    const extra = algebraic.substring(4);
+    return [from, to, extra];
 }
 
 function openAdjacent(irBlack: boolean, from: number, board: string[]){

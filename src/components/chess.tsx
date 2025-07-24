@@ -76,7 +76,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const isFlipped = (mode == "hotseat" && activePlayer == 1) || (mode == "network" && myPlayerNumber == 1);
     const files = isFlipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
     const ranks = isFlipped ? ["1","2","3","4","5","6","7","8"] : ["8","7","6","5","4","3","2","1"];
-    console.log("IS FLIPPED", isFlipped, mode, myPlayerNumber);
     return (
     <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
         <div />

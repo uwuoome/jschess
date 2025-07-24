@@ -104,7 +104,7 @@ function castling(state: GameState, target: number){
   // perform castling if that is the move 
   const home = homeRow * 8;
   const [lrook, king, rrook] = [home, home+4, home+7];
-  if((state.selected.from == lrook && target == king) || (state.selected.from == king && target == lrook)){
+  if(state.selected.from == king && target == home+2){
     if(castlingAvailable & 1){  
       const nextBoard = [...state.board];
       nextBoard[king-1] = nextBoard[lrook];
@@ -114,7 +114,7 @@ function castling(state: GameState, target: number){
       state.board = nextBoard;
       return true;
     }
-  }else if((state.selected.from == rrook && target == king) || (state.selected.from == king && target == rrook)){
+  }else if(state.selected.from == king && target == home+6){
     if(castlingAvailable & 2){  
       const nextBoard = [...state.board];
       nextBoard[king+1] = nextBoard[rrook];
@@ -227,13 +227,30 @@ const chessSlice = createSlice({
       let [from, to, extra] = move as [number, number, string];
       const opponentIsBlack = state.myPlayer == 0;
       const opponentQueen = opponentIsBlack? "q": "Q";
-      //TODO: need to detect castling here!
-        const nextBoard = [...state.board];
-        const moving = nextBoard[from];
-        nextBoard[from] = " ";
-        nextBoard[to] = extra == "p"? opponentQueen: moving;
-        state.board = nextBoard;
-      //}
+
+      const nextBoard = [...state.board];
+      if(opponentIsBlack){                    // if castling move rook first
+        if(action.payload == "e8g8"){         // kingside castling
+          nextBoard[7] = " ";
+          nextBoard[5] = "r";
+        }else if(action.payload == "e8c8"){   // queenside castling
+          nextBoard[0] = " ";
+          nextBoard[3] = "r";
+        }
+      }else{
+        if(action.payload == "e1g1"){         // kingside
+          nextBoard[63] = " ";
+          nextBoard[61] = "R";
+        }else if(action.payload == "e1c1"){   // queenside                  
+          nextBoard[56] = " ";
+          nextBoard[59] = "R";
+        }
+      }
+      const moving = nextBoard[from];
+      nextBoard[from] = " ";
+      nextBoard[to] = extra == "p"? opponentQueen: moving;
+      state.board = nextBoard;
+      
       state.activePlayer ^= 1;
       if(state.activePlayer == 0){
         state.turnNumber += 1;

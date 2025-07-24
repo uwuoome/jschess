@@ -174,21 +174,21 @@ export function validIndices(code: string, index: number, board: string[], flipp
     // check if castling is valid here, and if so add moves to result.
     if(castling == 0) return result; 
     if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) == -1) return result;  // no king on board
-    if(code != (irBlack? "r" : "R") && code != (irBlack? "k" : "K") ) return result;    // not king or rook selected
+    if(code != (irBlack? "k" : "K")) return result;                                     // king not selected
     const home = homeRow(irBlack, flipped)*8;
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
-    if(castling & 1 && index != home + 7){                                              // Neither king nor left rook has moved,
+    if(castling & 1){                                                                   // Neither king nor left rook has moved,
         const lhsClear = board.slice(home+1, home+3).join("") == "  ";                  // No pieces between the king and rook, 
         const noMoveThroughCheck = [2, 3, 4].every(castlingNoCheck);                    // The king is not in check, and                        
         if(lhsClear && noMoveThroughCheck){                                             // The king cannot move through or into check. 
-            result.push(index == home? home+4: home);                  
+            result.push(home+2);                  
         }
     }
-    if(castling & 2 && index != home){                                                  // Neither king nor right rook has moved.   
+    if(castling & 2){                                                                   // Neither king nor right rook has moved.   
         const rhsClear = board.slice(home+5, home+7).join("") == "  ";
         const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck);
         if(rhsClear && noMoveThroughCheck){
-            result.push(index == home+7? home+4: home+7); 
+            result.push(home+6); 
         }            
     }
     return result;
@@ -238,7 +238,7 @@ export function parseMove(algebraic: string){
     const from = convert(algebraic[1], algebraic[0]);
     const to =  convert(algebraic[3], algebraic[2]); 
     const extra = algebraic.substring(4);
-    console.log(algebraic, "parsed as from", from, "to", to);
+    //console.log(algebraic, "parsed as from", from, "to", to);
     return [from, to, extra];
 }
 

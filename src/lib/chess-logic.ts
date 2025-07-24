@@ -146,9 +146,8 @@ function pawnMoves(irBlack: boolean, row: number, col: number, board: string[], 
     return result.map(rowColToIndex);
 }
 
-function homeRow(irBlack:boolean, flipped: boolean) {
-    if(flipped) irBlack? 7: 0;
-    return irBlack? 0: 7;
+function homeRow(irBlack: boolean, flipped: boolean){
+    return irBlack == flipped? 7: 0;
 }
 
 /**
@@ -178,19 +177,35 @@ export function validIndices(code: string, index: number, board: string[], flipp
     if(code != (irBlack? "r" : "R") && code != (irBlack? "k" : "K") ) return result;    // not king or rook selected
     const home = homeRow(irBlack, flipped)*8;
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
-    if(castling & 1){                                                          // Neither king nor left rook has moved. 
-        const lhsClear = board.slice(home+1, home+4).join("") == "   ";        // No pieces between the king and rook. 
-        const noMoveThroughCheck = [3, 4, 5].every(castlingNoCheck);           // The king is not in check.                             
-        if(lhsClear && noMoveThroughCheck){                                    // The king cannot move through or into check.
-            result.push(index == home? home+4: home);                  
+    if(castling & 1){                                                              // Neither king nor left rook has moved,
+        if(! flipped){ 
+            const lhsClear = board.slice(home+1, home+4).join("") == "   ";        // No pieces between the king and rook, 
+            const noMoveThroughCheck = [2, 3, 4, 5].every(castlingNoCheck);        // The king is not in check, and                            
+            if(lhsClear && noMoveThroughCheck){                                    // The king cannot move through or into check.
+                result.push(index == home? home+4: home);                  
+            }
+        }else{
+            const lhsClear = board.slice(home+1, home+3).join("") == "  ";        
+            const noMoveThroughCheck = [1, 2, 3].every(castlingNoCheck);                                     
+            if(lhsClear && noMoveThroughCheck){                                    
+                result.push(index == home? home+3: home);                  
+            }
         }
     }
-    if(castling & 2){                                                          // Neither king nor right rook has moved.                         
-        const rhsClear = board.slice(home+5, home+7).join("") == "  ";
-        const noMoveThroughCheck = [5, 6, 7].every(castlingNoCheck);
-        if(rhsClear && noMoveThroughCheck){
-            result.push(index == home+7? home+4: home+7); 
-        }           
+    if(castling & 2){                                                              // Neither king nor right rook has moved.   
+        if(flipped){                      
+            const rhsClear = board.slice(home+4, home+7).join("") == "   ";
+            const noMoveThroughCheck = [2, 3, 4, 5].every(castlingNoCheck);
+            if(rhsClear && noMoveThroughCheck){
+                result.push(index == home+7? home+4: home+7); 
+            }
+        }else{
+            const rhsClear = board.slice(home+5, home+7).join("") == "  ";
+            const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck);
+            if(rhsClear && noMoveThroughCheck){
+                result.push(index == home+7? home+4: home+7); 
+            }            
+        }
     }
     return result;
 }

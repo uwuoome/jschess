@@ -21,6 +21,7 @@ export function P2PConnector({game, requesterID, seekingID, onCancel}: Connector
   const {gameReady, leaveGame, sendMessage} = useP2P({
     myid: requesterID, 
     seekingID, 
+    gameID: game.name,
     onOpponentLeave,
     onMessage: setCurrentMessage
   });

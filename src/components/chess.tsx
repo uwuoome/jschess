@@ -13,7 +13,7 @@ export type ChessProps = {
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -103,19 +103,15 @@ return (
           const col = colIndex;//isFlipped ? 7 - colIndex : colIndex;
           const index = row * 8 + col;
           const isBackgroundBlack = (row + col) % 2 === 1;
-          const tileIndex = isFlipped ? index : ( (7 - Math.floor(index / 8)) * 8 + (index % 8));
 
           return (
             <div style={{ position: "relative" }} key={index}>
 
-                {DEBUG && ( <>
+                {DEBUG && (
                 <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
-                {tileIndex}
+                    {index}
                 </div>
-                <div style={{ position: "absolute", top: 0, right: "2px", fontSize: "10px", color: "red" }}>
-                {algebraicNotation(tileIndex)}
-                </div>
-                </>) || ""}
+                ) || ""}
 
                 <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
                 {board[index] !== " " && (

@@ -8,6 +8,7 @@ const DEBUG_P2P = true;
 type ConnectionProps = {
     myid: string;
     seekingID: string | null;
+    gameID: string | null;
     onOpponentLeave: Function | undefined | null; 
     onMessage: Function | undefined | null;
     onInit?: Function; 
@@ -27,7 +28,7 @@ export type WebRTCMessage = {
     data: any;
 }
 
-export function useP2P({myid, seekingID, onOpponentLeave, onMessage, onInit, onRespond}: ConnectionProps) {
+export function useP2P({myid, seekingID, gameID, onOpponentLeave, onMessage, onInit, onRespond}: ConnectionProps) {
     const socketRef = useRef<any>(null);      // our socket ref
     const peerRef = useRef<any>(null);        // peer WebRTC Handle
     const peerSocketRef = useRef<any>(null);  // peer socket ref
@@ -71,7 +72,7 @@ export function useP2P({myid, seekingID, onOpponentLeave, onMessage, onInit, onR
 
         function onConnect() {
             console.log("On socket connect", myid, "to", seekingID);
-            socketRef.current.emit('join', { requesterID: myid, seekingID });
+            socketRef.current.emit('join', { requesterID: myid, seekingID, gameID });
         }
 
         function onPeerJoin(peerSocketID: string) {

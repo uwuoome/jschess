@@ -38,18 +38,19 @@ const initialBoard = [
   " ", " ", " ", " ", " ", " ", " ", " ",
   "P", "P", "P", "P", "P", "P", "P", "P",
   "R", "N", "B", "Q", "K", "B", "N", "R",
-];*/
-
-const initialBoard = [
-  "r", "n", "b", "q", "k", " ", " ", "r",
-  "p", "p", "p", "p", "p", "p", "p", "p",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  "P", "P", "P", "P", "P", "P", "P", "P",
-  "R", " ", " ", " ", "K", "B", "N", "R",
 ];
+*/
+const initialBoard = [
+  "r", " ", " ", " ", "k", " ", " ", "r",
+  "p", "p", "b", "p", "p", " ", "p", "p",
+  " ", " ", " ", " ", " ", "P", " ", " ",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", "P", " ", " ", " ", " ", " ",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  "P", "P", " ", "P", "P", " ", "P", "P",
+  "R", " ", " ", " ", "K", " ", " ", "R",
+];
+
 
 
 const initialState: GameState = {
@@ -142,7 +143,7 @@ function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
 
 function endTurn(state: GameState){
   if(state.mode == "hotseat"){ // flip board
-    state.board = chunk(state.board, 8).reverse().flat();
+    state.board = state.board.reverse();//chunk(state.board, 8).map((row: string[]) => row.reverse()).reverse().flat();
   }
   state.selected = null;
   state.target = null;
@@ -159,6 +160,8 @@ function endTurn(state: GameState){
   }else if(checkState == 2){
     state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
     state.activePlayer = -1;
+  }else{
+    state.message = ``;
   }
 }
 
@@ -177,7 +180,7 @@ const chessSlice = createSlice({
       state.mode = mode;
       state.myPlayer = player;
       if(player == 1){
-        state.board = chunk(state.board, 8).reverse().flat();
+        state.board = state.board.reverse();
       }
     },
     selectPiece: (state, action) => {

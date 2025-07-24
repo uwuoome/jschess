@@ -41,14 +41,10 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
    
     if(mode == "network"){
         const init = () => {
-            player == 0 && dispatch(setModeAndPlayerNumber({mode: "network", player:0}));
-        };
-        const respond = () => {
-            player == 1 && dispatch(setModeAndPlayerNumber({mode: "network", player:1}));
+            dispatch(setModeAndPlayerNumber({mode: "network", player}));
         };
         const send = () => {
-            if(! sendMessage) return;
-            if(! (selected && target)) return; // not complete
+            if(! (sendMessage && selected && target)) return;
             sendMessage({data: algebraicNotation(selected.from)+algebraicNotation(target)});
         };
         const receive = () =>{
@@ -57,7 +53,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
             dispatch(opponentMove(currentMessage.data))
         };
         useEffect(init, []); 
-        useEffect(respond, [myPlayerNumber]);
         useEffect(receive, [currentMessage]);
         useEffect(send, [selected, target]);
     }
@@ -81,87 +76,61 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const isFlipped = (mode == "hotseat" && activePlayer == 1) || (mode == "network" && myPlayerNumber == 1);
     const files = isFlipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
     const ranks = isFlipped ? ["1","2","3","4","5","6","7","8"] : ["8","7","6","5","4","3","2","1"];
-
-return (
-  <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
-    <div />
-    {files.map((file, i) => (
-      <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
-        {file}
-      </div>
-    ))}
-    <div />
-
-    {ranks.map((rank, rowIndex) => (
-      <React.Fragment key={`row-${rowIndex}`}>
-        <div className="flex items-center justify-center text-xs font-semibold p-1">
-          {rank}
-        </div>
-
-        {files.map((_, colIndex) => {
-          const row = rowIndex; //isFlipped ? rowIndex : 7 - rowIndex;
-          const col = colIndex;//isFlipped ? 7 - colIndex : colIndex;
-          const index = row * 8 + col;
-          const isBackgroundBlack = (row + col) % 2 === 1;
-
-          return (
-            <div style={{ position: "relative" }} key={index}>
-
-                {DEBUG && (
-                <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
-                    {index}
-                </div>
-                ) || ""}
-
-                <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
-                {board[index] !== " " && (
-                    <img src={`chess/${piece(board[index])}`} className={`w-12 h-12 ml-2 ${selected?.from === index ? "bg-blue-200" : ""}`}
-                    />
-                )}
-                </div>
-            </div>
-          );
-        })}
-        <div className="flex items-center justify-center text-xs font-semibold p-1">
-          {rank}
-        </div>
-      </React.Fragment>
-    ))}
-    <div />
-    {files.map((file, i) => (
-      <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
-        {file}
-      </div>
-    ))}
-    <div />
-  </div>
-);
-/*
+    console.log("IS FLIPPED", isFlipped, mode, myPlayerNumber);
     return (
-        <div className="grid grid-cols-8 border-2 border-black w-fit select-none">
-        {board.map((cell, index) => {
-            const isFlipped = ((mode == "hotseat" && activePlayer == 1) || myPlayerNumber == 1)? 1: 0;
-            const isBackgroundBlack = (Math.floor(index / 8) + (index % 8)) % 2 == isFlipped;
-            const tileIndex = isFlipped? index: ( (7 - Math.floor(index / 8)) * 8 + (index % 8));
+    <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
+        <div />
+        {files.map((file, i) => (
+        <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
+            {file}
+        </div>
+        ))}
+        <div />
+
+        {ranks.map((rank, rowIndex) => (
+        <React.Fragment key={`row-${rowIndex}`}>
+            <div className="flex items-center justify-center text-xs font-semibold p-1">
+            {rank}
+            </div>
+
+            {files.map((_, colIndex) => {
+            const row = isFlipped ? 7 - rowIndex: rowIndex;
+            const col = isFlipped ? 7 - colIndex : colIndex;
+            const index = row * 8 + col;
+            const isBackgroundBlack = (row + col) % 2 === 1;
+
             return (
-                <div style={{position:"relative"}} key={tileIndex}>
-                    <div style={{position:"absolute", top: 0, left: "2px", fontSize: "10px", color:"red"}}>
-                        {tileIndex}  
+                <div style={{ position: "relative" }} key={index}>
+
+                    {DEBUG && (
+                    <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
+                        {index}
                     </div>
-                    <div style={{position:"absolute", top: 0, right: "2px", fontSize: "10px", color:"red"}}>
-                        {algebraicNotation(tileIndex)}
-                    </div>
-                    <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={move.bind(null, index)}>
-                        {cell != " " && <img src={`chess/${piece(cell)}`} 
-                            className={`${selected?.from == index? "w-12 h-12 ml-2 bg-blue-200": "w-12 h-12 ml-2" }`}
-                        />}
+                    ) || ""}
+
+                    <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
+                    {board[index] !== " " && (
+                        <img src={`chess/${piece(board[index])}`} className={`w-12 h-12 ml-2 ${selected?.from === index ? "bg-blue-200" : ""}`}
+                        />
+                    )}
                     </div>
                 </div>
             );
-        })}
+            })}
+            <div className="flex items-center justify-center text-xs font-semibold p-1">
+            {rank}
+            </div>
+        </React.Fragment>
+        ))}
+        <div />
+        {files.map((file, i) => (
+        <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
+            {file}
         </div>
+        ))}
+        <div />
+    </div>
     );
-*/
 }
 
 function ChessInfo(){

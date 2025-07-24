@@ -75,10 +75,8 @@ const initialState: GameState = {
     message: ""
 }
 
-const getHomeRow = (irBlack:boolean, mode: string) => {
-    if(mode == "hotseat") irBlack? 7: 0;
-    return irBlack? 0: 7;
-}
+
+const getHomeRow = (reversed: boolean) => reversed? 0: 7;
 
 // Only called when completing a move. Checks if a rook or the king has moved, and if so logs the action.
 // If the move to perform is castling, it performs the move too, and returns true signalling the board update.
@@ -87,8 +85,10 @@ function castling(state: GameState, target: number){
     throw new Error("Invalid state for castling");
   }
   const castlingAvailable = state.players[state.activePlayer].castling;
+
   // affect future castling potential
-  const homeRow = getHomeRow(state.activePlayer == 1, state.mode);
+  const reversed = (state.mode == "hotseat" && state.activePlayer == 1) || (state.mode == "network" && state.myPlayer == 1);  
+  const homeRow = getHomeRow(reversed);
   const moveFrom = state.selected?.from;
   if(moveFrom == null) return; 
   const [row, col] = [Math.floor(moveFrom / 8), moveFrom % 8];
@@ -133,7 +133,7 @@ function castling(state: GameState, target: number){
 // TODO: this can be moved into logic, conbvert mode to flipped in that
 function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
   if(piece.toUpperCase() != "P") return piece;
-  const homeRow = getHomeRow(player == 1, mode);
+  const homeRow = getHomeRow(player == 1);
   const row = Math.floor(moveTo / 8);
   const moveRow = (mode == "hotseat" &&  player == 1)? 7-row : row;
   if(homeRow == 7 && moveRow == 0) return player == 0? "Q": "q";
@@ -142,9 +142,6 @@ function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
 }
 
 function endTurn(state: GameState){
-  if(state.mode == "hotseat"){ // flip board
-    state.board = state.board.reverse();//chunk(state.board, 8).map((row: string[]) => row.reverse()).reverse().flat();
-  }
   state.selected = null;
   state.target = null;
   state.activePlayer ^= 1;
@@ -179,9 +176,6 @@ const chessSlice = createSlice({
       }
       state.mode = mode;
       state.myPlayer = player;
-      if(player == 1){
-        state.board = state.board.reverse();
-      }
     },
     selectPiece: (state, action) => {
       if(state.selected || state.target) return; 
@@ -191,8 +185,7 @@ const chessSlice = createSlice({
         if(piece == null || piece == " ") return; // no piece given
         const pieceOwner = piece.toLowerCase() == piece? 1: 0;
         if(pieceOwner != state.activePlayer) return;  // piece to move not owned by player 
-        const boardFlipped = (state.mode == "hotseat" && state.activePlayer == 1) || 
-                             (state.mode == "network" && state.myPlayer == 1);  
+        const boardFlipped = false;
         const castling = state.players[state.activePlayer].castling;
         state.selected = {
           piece,
@@ -227,30 +220,27 @@ const chessSlice = createSlice({
       if((!action.payload) || action.payload == "0000"){
         return endTurn(state);
       }
-      const move = parseMove(action.payload, state.myPlayer == 1);
+      const move = parseMove(action.payload);
       if(move == null){
         throw Error("Invalid move: "+action.payload);
       }
       let [from, to, extra] = move as [number, number, string];
-      if(state.myPlayer == 1){
-        from = (7 - Math.floor(from / 8))*8+(from % 8);
-        to = (7 - Math.floor(to / 8))*8+(to % 8);
-      }
       const opponentIsBlack = state.myPlayer == 0;
       const opponentQueen = opponentIsBlack? "q": "Q";
-      // check for castling
-      const nextBoard = [...state.board];
-      const moving = nextBoard[from as number];
-      nextBoard[from as number] = " ";
-      nextBoard[to as number] = extra == "p"? opponentQueen: moving;
-      state.board = nextBoard;
+      //TODO: need to detect castling here!
+        const nextBoard = [...state.board];
+        const moving = nextBoard[from];
+        nextBoard[from] = " ";
+        nextBoard[to] = extra == "p"? opponentQueen: moving;
+        state.board = nextBoard;
+      //}
       state.activePlayer ^= 1;
       if(state.activePlayer == 0){
         state.turnNumber += 1;
       }
       // test for check or check and check mate
       const isBlackNext = !!state.activePlayer;
-      const flipped = (state.mode == "hotseat" && isBlackNext) || state.myPlayer == 1;
+      const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
       const checkState = isInCheck(isBlackNext, state.board, flipped);
       if(checkState == 1){
         state.message = `Your are in Check.`;

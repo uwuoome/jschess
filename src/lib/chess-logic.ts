@@ -177,35 +177,19 @@ export function validIndices(code: string, index: number, board: string[], flipp
     if(code != (irBlack? "r" : "R") && code != (irBlack? "k" : "K") ) return result;    // not king or rook selected
     const home = homeRow(irBlack, flipped)*8;
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
-    if(castling & 1){                                                              // Neither king nor left rook has moved,
-        if(! flipped){ 
-            const lhsClear = board.slice(home+1, home+4).join("") == "   ";        // No pieces between the king and rook, 
-            const noMoveThroughCheck = [2, 3, 4, 5].every(castlingNoCheck);        // The king is not in check, and                            
-            if(lhsClear && noMoveThroughCheck){                                    // The king cannot move through or into check.
-                result.push(index == home? home+4: home);                  
-            }
-        }else{
-            const lhsClear = board.slice(home+1, home+3).join("") == "  ";        
-            const noMoveThroughCheck = [1, 2, 3].every(castlingNoCheck);                                     
-            if(lhsClear && noMoveThroughCheck){                                    
-                result.push(index == home? home+3: home);                  
-            }
+    if(castling & 1 && index != home + 7){                                              // Neither king nor left rook has moved,
+        const lhsClear = board.slice(home+1, home+3).join("") == "  ";                  // No pieces between the king and rook, 
+        const noMoveThroughCheck = [2, 3, 4].every(castlingNoCheck);                    // The king is not in check, and                        
+        if(lhsClear && noMoveThroughCheck){                                             // The king cannot move through or into check. 
+            result.push(index == home? home+4: home);                  
         }
     }
-    if(castling & 2){                                                              // Neither king nor right rook has moved.   
-        if(flipped){                      
-            const rhsClear = board.slice(home+4, home+7).join("") == "   ";
-            const noMoveThroughCheck = [2, 3, 4, 5].every(castlingNoCheck);
-            if(rhsClear && noMoveThroughCheck){
-                result.push(index == home+7? home+4: home+7); 
-            }
-        }else{
-            const rhsClear = board.slice(home+5, home+7).join("") == "  ";
-            const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck);
-            if(rhsClear && noMoveThroughCheck){
-                result.push(index == home+7? home+4: home+7); 
-            }            
-        }
+    if(castling & 2 && index != home){                                                  // Neither king nor right rook has moved.   
+        const rhsClear = board.slice(home+5, home+7).join("") == "  ";
+        const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck);
+        if(rhsClear && noMoveThroughCheck){
+            result.push(index == home+7? home+4: home+7); 
+        }            
     }
     return result;
 }
@@ -231,7 +215,8 @@ function _validIndices(code: string, index: number, board: string[], flipped: bo
  */
 export function algebraicNotation(index: number){
     if(index < 0 || index > 63) return "N/A";
-    const [row, col] = [Math.floor(index / 8),  index % 8];
+    const row = 7-Math.floor(index / 8);
+    const col = (index % 8);
     return "abcdefgh"[col]+(row+1);
 }
 
@@ -240,16 +225,20 @@ export function algebraicNotation(index: number){
  * @return [fromIndex, toIndex, extraInfo] 3 element array. From and to indicies are 0 to 63 derived from the 
  * first 4 characters. Extra info is anything tacked on after.  
  */
-export function parseMove(algebraic: string, flipped: boolean){
+export function parseMove(algebraic: string){
     if(algebraic.length < 4) return null;
-    const rl: Record<'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h', number> = {
-        'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7
-    };
-    const fr = parseInt(algebraic[1]) -1;
-    const from = (flipped? fr: 7-fr) * 8 + (rl[algebraic[0]  as keyof typeof rl]);
-    const tr = parseInt(algebraic[3]) -1
-    const to =   (flipped? tr: 7-tr) * 8 + (rl[algebraic[2]  as keyof typeof rl]);
+    function convert(rank: string, file: string){
+        const rl: Record<'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h', number> = {
+            'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7
+        };
+        const rowNum = 7 - (parseInt(rank) - 1);
+        const colNum  = rl[file  as keyof typeof rl];
+        return rowNum * 8 + colNum;
+    }
+    const from = convert(algebraic[1], algebraic[0]);
+    const to =  convert(algebraic[3], algebraic[2]); 
     const extra = algebraic.substring(4);
+    console.log(algebraic, "parsed as from", from, "to", to);
     return [from, to, extra];
 }
 

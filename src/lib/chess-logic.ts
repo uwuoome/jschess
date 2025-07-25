@@ -177,16 +177,23 @@ export function validIndices(code: string, index: number, board: string[], flipp
     if(code != (irBlack? "k" : "K")) return result;                                     // king not selected
     const home = homeRow(irBlack, flipped)*8;
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
+    const noPawnsCheckBlankTiles = (home: number, from: number, to: number) =>{
+        const rowFrom = (home == 0? 1: 6) * 8;
+        return !board.slice(rowFrom+from-1, rowFrom+to+1).includes(irBlack? "P": "p"); 
+    };
     if(castling & 1){                                                                   // Neither king nor left rook has moved,
         const lhsClear = board.slice(home+1, home+3).join("") == "  ";                  // No pieces between the king and rook, 
-        const noMoveThroughCheck = [2, 3, 4].every(castlingNoCheck);                    // The king is not in check, and                        
+        const noMoveThroughCheck = [2, 3, 4].every(castlingNoCheck)  &&                   // The king is not in check, and   
+                                noPawnsCheckBlankTiles(home, 2, 3);
+        // test pawns over empty squares passed (2 and 3)                  
         if(lhsClear && noMoveThroughCheck){                                             // The king cannot move through or into check. 
             result.push(home+2);                  
         }
     }
     if(castling & 2){                                                                   // Neither king nor right rook has moved.   
         const rhsClear = board.slice(home+5, home+7).join("") == "  ";
-        const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck);
+        const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck) &&
+                                    noPawnsCheckBlankTiles(home, 5, 6);
         if(rhsClear && noMoveThroughCheck){
             result.push(home+6); 
         }            

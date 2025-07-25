@@ -41,11 +41,11 @@ const initialBoard = [
 */
 const initialBoard = [
   "r", " ", " ", " ", "k", " ", " ", "r",
-  "p", "p", "b", "p", "p", " ", "p", "p",
-  " ", " ", " ", " ", " ", "P", " ", " ",
+  "p", " ", "b", "p", "p", " ", "p", "p",
+  " ", "P", " ", " ", " ", "P", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", "P", " ", " ", " ", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", "p", " ", " ", "p", " ", " ",
   "P", "P", " ", "P", "P", " ", "P", "P",
   "R", " ", " ", " ", "K", " ", " ", "R",
 ];
@@ -271,7 +271,7 @@ const chessSlice = createSlice({
       }else{
         state.message = '';
       }
-      
+
       state.activePlayer ^= 1;
       if(state.activePlayer == 0){
         state.turnNumber += 1;

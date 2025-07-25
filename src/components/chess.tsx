@@ -66,11 +66,23 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
     function background(isBlack:boolean, index:number){
         const canMoveTo = selected?.options.includes(index);
+        const hilite = "border-blue-200"; // TODO: add themes
         if(canMoveTo){
-            const bg = isBlack? "bg-gray-200": "bg-gray-500"
-            return `${bg} border-8 border-solid border-blue-200`;
+            const light = "bg-gray-200";
+            const dark = "bg-gray-500";
+            const bg = isBlack? light: dark; 
+            return `${bg} border-8 border-solid ${hilite}`;
         }   
-        return isBlack? "bg-white": "bg-gray-400"
+        const light = "bg-white"
+        const dark = "bg-gray-400";
+        return isBlack? light: dark;
+    }
+
+    function pieceHilite(index: number){
+        const canMoveTo = selected?.options.includes(index);
+        const bg = selected?.from === index ? `bg-blue-200 ml-2` : "";
+        if(bg) return bg;
+        return canMoveTo? "ml-0": "ml-2";
     }
 
     const isFlipped = (mode == "hotseat" && activePlayer == 1) || (mode == "network" && myPlayerNumber == 1);
@@ -96,7 +108,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
             const row = isFlipped ? 7 - rowIndex: rowIndex;
             const col = isFlipped ? 7 - colIndex : colIndex;
             const index = row * 8 + col;
-            const isBackgroundBlack = (row + col) % 2 === 1;
+            const isBackgroundBlack = (row + col) % 2 === 0;
 
             return (
                 <div style={{ position: "relative" }} key={index}>
@@ -109,7 +121,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
                     <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
                     {board[index] !== " " && (
-                        <img src={`chess/${piece(board[index])}`} className={`w-12 h-12 ml-2 ${selected?.from === index ? "bg-blue-200" : ""}`}
+                        <img src={`chess/${piece(board[index])}`} className={`w-12 h-12 ${pieceHilite(index)}`}
                         />
                     )}
                     </div>

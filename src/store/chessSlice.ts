@@ -1,5 +1,4 @@
 import { isInCheck, parseMove, validIndices } from "@/lib/chess-logic";
-import { chunk } from "@/lib/utils";
 import { createSlice } from "@reduxjs/toolkit";
 
 
@@ -150,10 +149,14 @@ function endTurn(state: GameState){
   }
   // test for check or check and check mate
   const isBlackNext = !!state.activePlayer;
-  const flipped = (state.mode == "hotseat" && isBlackNext) || state.myPlayer == 1;
+  const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
   const checkState = isInCheck(isBlackNext, state.board, flipped);
   if(checkState == 1){
-    state.message = `You are in Check.`;
+    if(state.mode == "network"){
+      state.message = `Opponent is in Check.`;
+    }else{
+      state.message = `You are in Check.`;
+    }
   }else if(checkState == 2){
     state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
     state.activePlayer = -1;
@@ -226,7 +229,15 @@ const chessSlice = createSlice({
       }
       let [from, to, extra] = move as [number, number, string];
       const opponentIsBlack = state.myPlayer == 0;
-      const opponentQueen = opponentIsBlack? "q": "Q";
+      
+      const isBlackNext = !!state.activePlayer;
+      const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
+      const getPieceAfterPromotion = (moving: string, force: boolean) =>{
+        if(force) return opponentIsBlack? "q": "Q";
+        if(moving.toUpperCase() != "P") return moving;
+        if(getHomeRow(flipped) != Math.floor(to / 8)) return moving;
+        return opponentIsBlack? "q": "Q";
+      }
 
       const nextBoard = [...state.board];
       if(opponentIsBlack){                    // if castling move rook first
@@ -248,22 +259,22 @@ const chessSlice = createSlice({
       }
       const moving = nextBoard[from];
       nextBoard[from] = " ";
-      nextBoard[to] = extra == "p"? opponentQueen: moving;
+      nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
       state.board = nextBoard;
+
+      const checkState = isInCheck(!isBlackNext, state.board, !flipped);
+      if(checkState == 1){
+        state.message = `You are in Check.`;
+      }else if(checkState == 2){
+        state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
+        state.activePlayer = -1;
+      }else{
+        state.message = '';
+      }
       
       state.activePlayer ^= 1;
       if(state.activePlayer == 0){
         state.turnNumber += 1;
-      }
-      // test for check or check and check mate
-      const isBlackNext = !!state.activePlayer;
-      const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
-      const checkState = isInCheck(isBlackNext, state.board, flipped);
-      if(checkState == 1){
-        state.message = `Your are in Check.`;
-      }else if(checkState == 2){
-        state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
-        state.activePlayer = -1;
       }
     }
   }

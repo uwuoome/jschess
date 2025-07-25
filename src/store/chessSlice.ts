@@ -193,7 +193,7 @@ const chessSlice = createSlice({
         state.selected = {
           piece,
           from: action.payload,
-          options: validIndices(piece, action.payload, state.board, boardFlipped, castling)
+          options: validIndices(action.payload, state.board, boardFlipped, castling)
         };
       }else{
         state.selected = null;

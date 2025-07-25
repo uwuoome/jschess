@@ -151,14 +151,15 @@ function homeRow(irBlack: boolean, flipped: boolean){
 }
 
 /**
- * @param code char code of piece to move. K, Q, R, B, N, P or the same in lower case for black pieces.
  * @param index one dimensional board index of piece to move.
  * @param board 64 element array containing board tiles.
- * @param flipped if set, this flag denotes that the board has been turned upside down for black player playing locally.
+ * @param flipped if set, this flag denotes that the board has been rotated upside down for black player.
  * @param castling whether castling is available: 0 no, 1 left rook only, 2 right rook only, 3 both rooks.
- * @return an array of indices coresponding to valid move locations.
+ * @return an array of indices coresponding to valid move locations from the piece at the index given.
  */
-export function validIndices(code: string, index: number, board: string[], flipped: boolean, castling: 0 | 1 | 2 | 3){
+export function validIndices(index: number, board: string[], flipped: boolean, castling: 0 | 1 | 2 | 3){
+    if(index < 0 || index > 63) return [];
+    const code = board[index];
     const ignoringCheckStatus = _validIndices(code, index, board, flipped); 
     const irBlack = code.toUpperCase() != code; 
     function notMovingIntoCheck(moveIndex: number){
@@ -183,9 +184,8 @@ export function validIndices(code: string, index: number, board: string[], flipp
     };
     if(castling & 1){                                                                   // Neither king nor left rook has moved,
         const lhsClear = board.slice(home+1, home+3).join("") == "  ";                  // No pieces between the king and rook, 
-        const noMoveThroughCheck = [2, 3, 4].every(castlingNoCheck)  &&                   // The king is not in check, and   
-                                noPawnsCheckBlankTiles(home, 2, 3);
-        // test pawns over empty squares passed (2 and 3)                  
+        const noMoveThroughCheck = [2, 3, 4].every(castlingNoCheck)  &&                 // The king is not in check, and   
+                                noPawnsCheckBlankTiles(home, 2, 3);               
         if(lhsClear && noMoveThroughCheck){                                             // The king cannot move through or into check. 
             result.push(home+2);                  
         }
@@ -193,7 +193,7 @@ export function validIndices(code: string, index: number, board: string[], flipp
     if(castling & 2){                                                                   // Neither king nor right rook has moved.   
         const rhsClear = board.slice(home+5, home+7).join("") == "  ";
         const noMoveThroughCheck = [4, 5, 6].every(castlingNoCheck) &&
-                                    noPawnsCheckBlankTiles(home, 5, 6);
+                                    noPawnsCheckBlankTiles(home, 5, 6);                 // test pawns over empty squares passed (5 and 6)   
         if(rhsClear && noMoveThroughCheck){
             result.push(home+6); 
         }            

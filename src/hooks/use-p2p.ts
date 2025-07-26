@@ -4,6 +4,8 @@ import SimplePeer from 'simple-peer/simplepeer.min.js';
 
 const SERVER_URL = 'http://localhost:3000';
 const DEBUG_P2P = true;
+const RECONNECT_PERIOD = 5000;// ms
+const RECONNECT_ATTEMPTS = 8;
 
 type ConnectionProps = {
     myid: string;
@@ -100,6 +102,14 @@ export function useP2P({myid, seekingID, gameID, onOpponentLeave, onMessage, onI
                 DEBUG_P2P && console.log('Peer connected (first peer)');
                 typeof onInit == "function" && onInit();
             });
+            peer.on('close', () => {
+                DEBUG_P2P && console.log('Peer connection closed');
+                attemptReconnect();
+            });
+            peer.on('error', (err) => {
+                console.error('Peer connection error:', err);
+                attemptReconnect();
+            });
             peerRef.current = peer;
         }
         function onSignal({ source, signal }: any) {
@@ -128,6 +138,14 @@ export function useP2P({myid, seekingID, gameID, onOpponentLeave, onMessage, onI
                     typeof onRespond == "function" && onRespond();
                     setGameReady(2);
                 });
+                peer.on('close', () => {
+                    DEBUG_P2P && console.log('Peer connection closed');
+                    attemptReconnect();
+                });
+                peer.on('error', (err) => {
+                    console.error('Peer connection error:', err);
+                    attemptReconnect();
+                });
                 peer.signal(signal);
                 peerRef.current = peer;
             }else{
@@ -141,6 +159,51 @@ export function useP2P({myid, seekingID, gameID, onOpponentLeave, onMessage, onI
         window.addEventListener('beforeunload', closeConnections.bind(null, true));
         return closeConnections;
     }, []);
+
+    // This attempts peer reconnection during network hiccups. 
+    // If the page is accidentally reloaded, we need to attempt reconnection via the pairing server. 
+    let retryCount = 0;
+    function attemptReconnect(){
+        retryCount++;
+        if (retryCount >= RECONNECT_ATTEMPTS) {
+            console.warn("Max reconnect attempts reached");
+            closeConnections(false);
+            return;
+        }
+
+        DEBUG_P2P && console.log("Attempting reconnection...");
+        peerRef.current?.removeAllListeners(); // Clean up the previous peer
+        peerRef.current?.destroy();
+        peerRef.current = null;
+
+        if (peerSocketRef.current) {
+            const newPeer = new SimplePeer({ initiator: true, trickle: false });
+            newPeer.on('signal', (signal) => {
+                socketRef.current.emit('signal', { target: peerSocketRef.current, signal });
+            });
+            newPeer.on('data', (data) => {
+                const str = data.toString();
+                const msg = JSON.parse(str);
+                if (msg.task == WebRTCTask.End) {
+                    closeConnections(false);
+                } else {
+                    onMessage?.(msg);
+                }
+            });
+            newPeer.on('connect', () => {
+                DEBUG_P2P && console.log('Reconnected with peer');
+                typeof onInit == "function" && onInit();
+            });
+            newPeer.on('close', attemptReconnect);
+            newPeer.on('error', (err) => {
+                console.warn('Reconnection error:', err);
+                setTimeout(attemptReconnect, RECONNECT_PERIOD);  
+            });
+            peerRef.current = newPeer;
+        } else {
+            console.warn("No peerSocketRef available to reconnect to.");
+        }
+    }
 
     return {
         sendMessage,                                    // sends message to opponent

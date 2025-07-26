@@ -23,7 +23,9 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/friends" element={<Friends />} />
               <Route path="/rps" element={<P2PGame game={RockPaperScissors} />} />
-              <Route path="/chess" element={<P2PGame game={Chess} />} />
+              <Route path="/chess/p2p" element={<P2PGame game={Chess} />} />
+              <Route path="/chess/hotseat" element={<Chess player={0} mode="hotseat" />} />
+              <Route path="/chess/ai" element={<Chess player={0} mode="ai" />} />
             </Routes>
           </main>
         </SidebarProvider>

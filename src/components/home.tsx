@@ -27,7 +27,6 @@ export default function Home(){
             {validEmail && <>   
                 <p>Once your email is set, you can join a game.</p>
             </>}
-            {<Chess mode="hotseat" />}
         </div>
     );
 }

@@ -13,7 +13,7 @@ export type ChessProps = {
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -121,7 +121,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
                     <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
                     {board[index] !== " " && (
-                        <img src={`chess/${piece(board[index])}`} className={`w-12 h-12 ${pieceHilite(index)}`}
+                        <img src={`/chess/${piece(board[index])}`} className={`w-12 h-12 ${pieceHilite(index)}`}
                         />
                     )}
                     </div>
@@ -153,7 +153,7 @@ function ChessInfo(){
 
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     return (
-        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-129 font-bold select-none">
+        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-136 font-bold select-none">
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
                 Turn {turnNumber} {activePlayer? "Black": "White"}
             </span>

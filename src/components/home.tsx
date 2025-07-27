@@ -3,7 +3,6 @@ import { Input } from "./ui/input";
 import { setMyID, setPreferredGame } from "@/store/settingsSlice";
 import type { RootState } from "@/store";
 import { Label } from "@radix-ui/react-label";
-import Chess from "./chess";
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 

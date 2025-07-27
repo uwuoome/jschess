@@ -249,6 +249,19 @@ export function parseMove(algebraic: string){
     return [from, to, extra];
 }
 
+export function pieceName(code: string, includeColor?: boolean){
+    const prefix = includeColor? code.toUpperCase() == code? "White ": "Black ": "";
+    switch(code.toUpperCase()){
+        case "K": return prefix+"King";
+        case "Q": return prefix+"Queen";
+        case "B": return prefix+"Bishop";
+        case "N": return prefix+"Knight";
+        case "R": return prefix+"Rook";
+        case "P": return prefix+"Pawn";
+        default: "Unkown";
+    }
+}
+
 function openAdjacent(irBlack: boolean, from: number, board: string[]){
     if(from < 0 || from > 63) return [];
     const result: number[] = [];
@@ -319,6 +332,7 @@ export function isInCheck(irBlack: boolean, board: string[], flipped: boolean) {
         const newCheckFrom = pieceThatCanTake(irBlack, newBoard, flipped, kingIndex);
         return newCheckFrom == -1;
     });
+    // TODO: test for stalemate
     if(canTakePieceToRemoveCheck) return 1; 
     // no piece can effectively capture the opponent's piece causing the check, so look if we can move our king
     const adjacentTiles = openAdjacent(irBlack, kingIndex, board);

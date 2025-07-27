@@ -1,5 +1,6 @@
+import { getNextMove } from "@/lib/chess-ai";
 import { isInCheck, parseMove, validIndices } from "@/lib/chess-logic";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
 export type GamePlayer = {
@@ -27,7 +28,7 @@ export type ChessMove = {
 };
 
 export type CastlingAvailability = 0 | 1 | 2 | 3; // none, left only, right only, both
-/*
+
 const initialBoard = [
   "r", "n", "b", "q", "k", "b", "n", "r",
   "p", "p", "p", "p", "p", "p", "p", "p",
@@ -38,7 +39,7 @@ const initialBoard = [
   "P", "P", "P", "P", "P", "P", "P", "P",
   "R", "N", "B", "Q", "K", "B", "N", "R",
 ];
-*/
+/*
 const initialBoard = [
   "r", " ", " ", " ", "k", " ", " ", "r",
   "p", " ", "b", "p", "p", " ", "p", "p",
@@ -49,7 +50,7 @@ const initialBoard = [
   "P", "P", " ", "P", "P", " ", "P", "P",
   "R", " ", " ", " ", "K", " ", " ", "R",
 ];
-
+*/
 
 
 const initialState: GameState = {
@@ -140,6 +141,7 @@ function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
   return piece;
 }
 
+/** called when a local human player ends the turn */
 function endTurn(state: GameState){
   state.selected = null;
   state.target = null;
@@ -154,6 +156,8 @@ function endTurn(state: GameState){
   if(checkState == 1){
     if(state.mode == "network"){
       state.message = `Opponent is in Check.`;
+    }else if(state.mode == "ai"){
+      state.message = `AI is in Check.`;
     }else{
       state.message = `You are in Check.`;
     }
@@ -163,7 +167,79 @@ function endTurn(state: GameState){
   }else{
     state.message = ``;
   }
+
+  // if the opponent is an AI, begin search
+  if(state.mode == "ai"){
+    state.message += " AI is searching for next move...";
+    aiPlay(state);
+  }
 }
+
+function aiPlay(state: GameState){
+  // TODO: create an artificial delay if to quick
+  const aiMove = getNextMove(true, state.board);
+  handleOpponentMove(state, {payload: aiMove, type:""});
+}
+
+function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
+  if(action.payload == "" || action.payload == "0000"){
+    throw Error("Move required");
+  }
+  const move = parseMove(action.payload);
+  if(move == null){
+    throw Error("Invalid move: "+action.payload);
+  }
+  let [from, to, extra] = move as [number, number, string];
+  const opponentIsBlack = state.myPlayer == 0;
+  
+  const isBlackNext = !!state.activePlayer;
+  const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
+  const getPieceAfterPromotion = (moving: string, force: boolean) =>{
+    if(force) return opponentIsBlack? "q": "Q";
+    if(moving.toUpperCase() != "P") return moving;
+    if(getHomeRow(flipped) != Math.floor(to / 8)) return moving;
+    return opponentIsBlack? "q": "Q";
+  }
+
+  const nextBoard = [...state.board];
+  if(opponentIsBlack){                    // if castling move rook first
+    if(action.payload == "e8g8"){         // kingside castling
+      nextBoard[7] = " ";
+      nextBoard[5] = "r";
+    }else if(action.payload == "e8c8"){   // queenside castling
+      nextBoard[0] = " ";
+      nextBoard[3] = "r";
+    }
+  }else{
+    if(action.payload == "e1g1"){         // kingside
+      nextBoard[63] = " ";
+      nextBoard[61] = "R";
+    }else if(action.payload == "e1c1"){   // queenside                  
+      nextBoard[56] = " ";
+      nextBoard[59] = "R";
+    }
+  }
+  const moving = nextBoard[from];
+  nextBoard[from] = " ";
+  nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
+  state.board = nextBoard;
+
+  const checkState = isInCheck(!isBlackNext, state.board, !flipped);
+  if(checkState == 1){
+    state.message = `You are in Check.`;
+  }else if(checkState == 2){
+    state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
+    state.activePlayer = -1;
+  }else{
+    state.message = '';
+  }
+
+  state.activePlayer ^= 1;
+  if(state.activePlayer == 0){
+    state.turnNumber += 1;
+  }
+}
+
 
 const chessSlice = createSlice({
   name: 'game',
@@ -219,64 +295,7 @@ const chessSlice = createSlice({
       }
     },
     nextTurn: endTurn,
-    opponentMove: (state, action) =>{
-      if((!action.payload) || action.payload == "0000"){
-        return endTurn(state);
-      }
-      const move = parseMove(action.payload);
-      if(move == null){
-        throw Error("Invalid move: "+action.payload);
-      }
-      let [from, to, extra] = move as [number, number, string];
-      const opponentIsBlack = state.myPlayer == 0;
-      
-      const isBlackNext = !!state.activePlayer;
-      const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
-      const getPieceAfterPromotion = (moving: string, force: boolean) =>{
-        if(force) return opponentIsBlack? "q": "Q";
-        if(moving.toUpperCase() != "P") return moving;
-        if(getHomeRow(flipped) != Math.floor(to / 8)) return moving;
-        return opponentIsBlack? "q": "Q";
-      }
-
-      const nextBoard = [...state.board];
-      if(opponentIsBlack){                    // if castling move rook first
-        if(action.payload == "e8g8"){         // kingside castling
-          nextBoard[7] = " ";
-          nextBoard[5] = "r";
-        }else if(action.payload == "e8c8"){   // queenside castling
-          nextBoard[0] = " ";
-          nextBoard[3] = "r";
-        }
-      }else{
-        if(action.payload == "e1g1"){         // kingside
-          nextBoard[63] = " ";
-          nextBoard[61] = "R";
-        }else if(action.payload == "e1c1"){   // queenside                  
-          nextBoard[56] = " ";
-          nextBoard[59] = "R";
-        }
-      }
-      const moving = nextBoard[from];
-      nextBoard[from] = " ";
-      nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
-      state.board = nextBoard;
-
-      const checkState = isInCheck(!isBlackNext, state.board, !flipped);
-      if(checkState == 1){
-        state.message = `You are in Check.`;
-      }else if(checkState == 2){
-        state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
-        state.activePlayer = -1;
-      }else{
-        state.message = '';
-      }
-
-      state.activePlayer ^= 1;
-      if(state.activePlayer == 0){
-        state.turnNumber += 1;
-      }
-    }
+    opponentMove: handleOpponentMove,
   }
 });
 

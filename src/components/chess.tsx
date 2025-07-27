@@ -13,7 +13,7 @@ export type ChessProps = {
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -40,9 +40,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
    
     if(mode == "network"){
-        const init = () => {
-            dispatch(setModeAndPlayerNumber({mode: "network", player}));
-        };
         const send = () => {
             if(! (sendMessage && selected && target)) return;
             sendMessage({data: algebraicNotation(selected.from)+algebraicNotation(target)});
@@ -52,10 +49,13 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
             console.log("recieved", currentMessage);
             dispatch(opponentMove(currentMessage.data))
         };
-        useEffect(init, []); 
         useEffect(receive, [currentMessage]);
         useEffect(send, [selected, target]);
     }
+
+    useEffect(() => {
+        dispatch(setModeAndPlayerNumber({mode, player}));
+    }, []);
 
     useEffect(() => {
         if(target == null) return () => null;

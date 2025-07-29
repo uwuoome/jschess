@@ -1,5 +1,5 @@
 import { getNextMove } from "@/lib/chess-ai";
-import { isInCheck, parseMove, validIndices } from "@/lib/chess-logic";
+import { inCheck, parseMove, validIndices } from "@/lib/chess-logic";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
@@ -14,7 +14,7 @@ export type GameState = {
     myPlayer: 0 | 1;                      // player ID  (not used in hotseat games)   
     activePlayer: 0 | 1 | -1;             // active player index, or -1 to lock out both players
     turnNumber: number;                   // chess turn number
-    inCheck: 0 | 1 | 2;                   // no | yes | checkmate
+    inCheck: 0 | 1 | 2 | 3;               // no | yes | checkmate | stalemate
     board: string[];                      // 64 element char array describing board state
     selected: null | ChessMove;           // selection made
     target: null | number;                // target tile to move to after selection 
@@ -41,8 +41,8 @@ const initialBoard = [
 ];
 /*
 const initialBoard = [
-  "r", " ", " ", " ", "k", " ", " ", "r",
-  "p", " ", "b", "p", "p", " ", "p", "p",
+  "r", " ", "k", " ", " ", " ", " ", " ",
+  "p", " ", "b", "p", "p", "Q", "p", "p",
   " ", "P", " ", " ", " ", "P", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
@@ -51,7 +51,6 @@ const initialBoard = [
   "R", " ", " ", " ", "K", " ", " ", "R",
 ];
 */
-
 
 const initialState: GameState = {
     mode: "hotseat",
@@ -152,7 +151,8 @@ function endTurn(state: GameState){
   // test for check or check and check mate
   const isBlackNext = !!state.activePlayer;
   const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
-  const checkState = isInCheck(isBlackNext, state.board, flipped);
+  
+  const checkState = inCheck(isBlackNext, state.board, flipped);
   if(checkState == 1){
     if(state.mode == "network"){
       state.message = `Opponent is in Check.`;
@@ -164,12 +164,15 @@ function endTurn(state: GameState){
   }else if(checkState == 2){
     state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
     state.activePlayer = -1;
+  }else if(checkState == 3){
+    state.message = `Stalemate: Draw`;
+    state.activePlayer = -1;
   }else{
     state.message = ``;
   }
 
   // if the opponent is an AI, begin search
-  if(state.mode == "ai"){
+  if(state.mode == "ai" && checkState < 2){
     state.message += " AI is searching for next move...";
     aiPlay(state);
   }
@@ -178,7 +181,12 @@ function endTurn(state: GameState){
 function aiPlay(state: GameState){
   // TODO: create an artificial delay if to quick
   const aiMove = getNextMove(true, state.board);
-  handleOpponentMove(state, {payload: aiMove, type:""});
+  if(aiMove == null){
+    alert("AI cannot make move");
+  }else{
+    handleOpponentMove(state, {payload: aiMove, type:""});
+    nextTurn();
+  }
 }
 
 function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
@@ -224,11 +232,14 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
   nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
   state.board = nextBoard;
 
-  const checkState = isInCheck(!isBlackNext, state.board, !flipped);
+  const checkState = inCheck(!isBlackNext, state.board, !flipped);
   if(checkState == 1){
     state.message = `You are in Check.`;
   }else if(checkState == 2){
     state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
+    state.activePlayer = -1;
+  }else if(checkState == 3){
+    state.message = `Stalemate: Draw`;
     state.activePlayer = -1;
   }else{
     state.message = '';
@@ -239,7 +250,6 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
     state.turnNumber += 1;
   }
 }
-
 
 const chessSlice = createSlice({
   name: 'game',

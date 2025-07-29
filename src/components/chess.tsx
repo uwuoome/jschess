@@ -13,7 +13,7 @@ export type ChessProps = {
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -57,6 +57,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         dispatch(setModeAndPlayerNumber({mode, player}));
     }, []);
 
+    // problems when AI takes time thinking her
     useEffect(() => {
         if(target == null) return () => null;
         console.log("setting timeout");

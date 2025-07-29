@@ -137,10 +137,10 @@ function pawnMoves(irBlack: boolean, row: number, col: number, board: string[], 
     }
     if(irBlack){
         //if(row < 7){ // TODO: at end of board turns to queen, so this check can then be removed
-        scanAhead(row + 1);
+        if(row < 7) scanAhead(row + 1);
         if(row == 1 && board[16 + col] == " " && board[24 + col] == " ") result.push([3, col]);
     }else{  //irWhite
-        scanAhead(row - 1);
+        if(row > 0) scanAhead(row - 1);
         if(row == 6 && board[40 + col] == " " && board[32 + col] == " ") result.push([4, col]);
     }
     return result.map(rowColToIndex);
@@ -313,15 +313,18 @@ function allPiecesThatCanTake(irBlack: boolean, board: string[], flipped: boolea
 /** 
  * @param irBlack whether of not the player to test for check is black; false is white.
  * @param board 64 element array containing board tile state.
- * @param flipped true if teh board is flipped upside down (from black player's perspective).
+ * @param flipped true if the board is flipped upside down (from black player's perspective).
  * @param castling whether castling is available: 0 no, 1 left rook only, 2 right rook only, 3 both rooks.
- * @return 0 not in check, 1 check, 2 checkmate.
+ * @return 0 not in check, 1 check, 2 checkmate, 3 stalemate.
  */
-export function isInCheck(irBlack: boolean, board: string[], flipped: boolean) {
+export function inCheck(irBlack: boolean, board: string[], flipped: boolean) {
+    function isInStaleMate(){ // returns true if not in check but cannot move
+        return false;         // TODO
+    }
     const kingIndex = board.indexOf(irBlack?  "k": "K");
-    if(kingIndex == -1) return 0;
+    if(kingIndex == -1) return isInStaleMate()? 3: 0;
     const checkFrom = pieceThatCanTake(irBlack, board, flipped, kingIndex);
-    if(checkFrom == -1) return 0;                           // not in check
+    if(checkFrom == -1) return isInStaleMate()? 3: 0;                       // not in check
     // finding all pieces that can remove the piece causing check
     const checkRemovedBy = allPiecesThatCanTake(!irBlack, board, flipped, checkFrom); 
     const canTakePieceToRemoveCheck = checkRemovedBy.some((removedByIndex: number) => {
@@ -337,7 +340,12 @@ export function isInCheck(irBlack: boolean, board: string[], flipped: boolean) {
     // no piece can effectively capture the opponent's piece causing the check, so look if we can move our king
     const adjacentTiles = openAdjacent(irBlack, kingIndex, board);
     if(adjacentTiles.length == 0) return 2;                    // in check with no adjacent free tiles.   
-    const checkFromIndices = adjacentTiles.map(pieceThatCanTake.bind(null, irBlack, board, flipped));
+    const checkFromIndices = adjacentTiles.map(i =>{
+        const nextBoard = [...board];
+        nextBoard[i] = nextBoard[kingIndex];
+        nextBoard[kingIndex] = EMPTY;
+        return pieceThatCanTake(irBlack, nextBoard, flipped, i);
+    });
     if(checkFromIndices.includes(-1)) return 1;                // in check but there's an escape tile 
     return 2;                                                   
 }

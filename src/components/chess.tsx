@@ -1,5 +1,4 @@
 import type { WebRTCMessage } from "@/hooks/use-p2p";
-import { getAiMove } from "@/lib/chess-ai";
 import { algebraicNotation } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
 import { movePiece, nextTurn, opponentMove, selectPiece, setModeAndPlayerNumber } from "@/store/chessSlice";
@@ -13,6 +12,10 @@ export type ChessProps = {
     sendMessage?: (msg: WebRTCMessage) => void;// network transmit only for network mode
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
+
+const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
+  type: "module",
+});
 
 const DEBUG = 0;
 
@@ -57,18 +60,20 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
     // ai play specific hooks
     useEffect(() => {
-        if(mode != "ai") return;
-        const maybePlayAI = async () => {
-            if(activePlayer != 1) return;
-            try {
-                const aiMove = await getAiMove(board);
-                dispatch(opponentMove(aiMove));
-                dispatch(nextTurn());
-            } catch (err) {
-                console.error("AI failed to move:", err);
-            }
+        if (mode != "ai" || activePlayer != 1) return;
+        const start = Date.now();
+        const searchDepth = 6;
+        AiWorker.onmessage = (e) => {
+            const aiMove = e.data.move;
+            const seconds = ((Date.now() - start) / 1000).toFixed(3);
+            console.log(`${seconds} seconds to find move at search depth ${searchDepth} with js minmax ai.`);
+            dispatch(opponentMove(aiMove));
+            dispatch(nextTurn());
         };
-        maybePlayAI();
+        AiWorker.onerror = (err) => {
+            console.error("AI worker failed:", err);
+        };
+        AiWorker.postMessage({ board, depth: searchDepth });
     }, [activePlayer, mode]);
 
     useEffect(() => {
@@ -76,8 +81,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }, []);
 
     useEffect(() => {
+        // Create an artifical delay between players' turns.
         if(target == null) return () => null;
-        console.log("setting timeout");
+        console.log("Setting timeout");
         const timeout = setTimeout( () => dispatch(nextTurn()), 800 );
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);

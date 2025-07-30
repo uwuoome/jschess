@@ -221,12 +221,13 @@ function piecesOnBoard(board: string[]){
 /**
  * Synchronous search for AI move
  */
-export function getNextMove(isBlack: boolean, board: string[], searchDepth: number = 2): string{
+export function getNextMove(isBlack: boolean, board: string[], searchDepth: number = 4): string{
     const depth = Math.floor(searchDepth);
-    if(depth < 1 || depth > 8){
-        throw new Error(`Invalid search depth: ${depth}. Must be between 1 and 8.`);
+    if(depth < 1 || depth > 10){
+        throw new Error(`Invalid search depth: ${depth}. Must be between 1 and 12.`);
     }
-    const bestMove = alphaBetaSearch(isBlack, board, 4);
+    console.log("search depth", searchDepth);
+    const bestMove = alphaBetaSearch(isBlack, board, searchDepth);
     if(bestMove == null) return "N/A"; // stalemate shouldn't occcur because should have been checked prior
     return algebraicNotation(bestMove.from)+algebraicNotation(bestMove.to);
 }
@@ -234,13 +235,13 @@ export function getNextMove(isBlack: boolean, board: string[], searchDepth: numb
 /**
  * Aysnchronous search for AI move
  */
-export async function getAiMove(board: string[], minDelay: number = 800): Promise<string> {
+export async function getAiMove(board: string[], searchDepth: number = 4, minDelay: number = 800): Promise<string> {
   const delay = new Promise<void>(resolve => setTimeout(resolve, minDelay));
   let aiMove: string | null = null;
 
   const aiPromise = new Promise<void>((resolve) => {
     setTimeout(() => {
-      aiMove = getNextMove(true, board); 
+      aiMove = getNextMove(true, board, searchDepth); 
       resolve();
     }, 0);
   });

@@ -29,7 +29,7 @@ export type ChessMove = {
 export type CastlingAvailability = 0 | 1 | 2 | 3; // none, left only, right only, both
 
 
-/*
+
 const initialBoard = [
   "r", "n", "b", "q", "k", "b", "n", "r",
   "p", "p", "p", "p", "p", "p", "p", "p",
@@ -40,7 +40,7 @@ const initialBoard = [
   "P", "P", "P", "P", "P", "P", "P", "P",
   "R", "N", "B", "Q", "K", "B", "N", "R",
 ];
-*/
+/*
 const initialBoard = [
   " ", " ", " ", " ", " ", " ", " ", " ",
   "k", " ", " ", " ", " ", "Q", " ", " ",
@@ -51,7 +51,7 @@ const initialBoard = [
   "P", "P", " ", "P", "P", " ", "P", "P",
   " ", " ", " ", " ", "K", " ", " ", "R",
 ];
-
+*/
 
 const initialState: GameState = {
     mode: "hotseat",

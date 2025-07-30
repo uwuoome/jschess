@@ -218,6 +218,9 @@ function piecesOnBoard(board: string[]){
     return pieces;
 }
 
+/**
+ * Synchronous search for AI move
+ */
 export function getNextMove(isBlack: boolean, board: string[], searchDepth: number = 2): string{
     const depth = Math.floor(searchDepth);
     if(depth < 1 || depth > 8){
@@ -228,5 +231,26 @@ export function getNextMove(isBlack: boolean, board: string[], searchDepth: numb
     return algebraicNotation(bestMove.from)+algebraicNotation(bestMove.to);
 }
 
+/**
+ * Aysnchronous search for AI move
+ */
+export async function getAiMove(board: string[], minDelay: number = 800): Promise<string> {
+  const delay = new Promise<void>(resolve => setTimeout(resolve, minDelay));
+  let aiMove: string | null = null;
 
+  const aiPromise = new Promise<void>((resolve) => {
+    setTimeout(() => {
+      aiMove = getNextMove(true, board); 
+      resolve();
+    }, 0);
+  });
 
+  await Promise.all([aiPromise, delay]);
+
+  if (aiMove == null) {
+    throw new Error("AI move is unexpectedly null.");
+  } else if (aiMove === "N/A") {
+    throw new Error("This shouldn't happen: AI searching for move in checkmate or stalemate.");
+  }
+  return aiMove;
+}

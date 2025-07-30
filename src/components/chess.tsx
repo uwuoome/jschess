@@ -1,4 +1,5 @@
 import type { WebRTCMessage } from "@/hooks/use-p2p";
+import { getAiMove } from "@/lib/chess-ai";
 import { algebraicNotation } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
 import { movePiece, nextTurn, opponentMove, selectPiece, setModeAndPlayerNumber } from "@/store/chessSlice";
@@ -39,25 +40,41 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }
 
    
-    if(mode == "network"){
-        const send = () => {
-            if(! (sendMessage && selected && target)) return;
-            sendMessage({data: algebraicNotation(selected.from)+algebraicNotation(target)});
+    // network play specific hooks
+    const send = () => {
+        if(mode != "network") return;
+        if(! (sendMessage && selected && target)) return;
+        sendMessage({data: algebraicNotation(selected.from)+algebraicNotation(target)});
+    };
+    const receive = () =>{
+        if(mode != "network") return;
+        if(!currentMessage) return;
+        console.log("recieved", currentMessage);
+        dispatch(opponentMove(currentMessage.data))
+    };
+    useEffect(receive, [currentMessage]);
+    useEffect(send, [selected, target]);
+
+    // ai play specific hooks
+    useEffect(() => {
+        if(mode != "ai") return;
+        const maybePlayAI = async () => {
+            if(activePlayer != 1) return;
+            try {
+                const aiMove = await getAiMove(board);
+                dispatch(opponentMove(aiMove));
+                dispatch(nextTurn());
+            } catch (err) {
+                console.error("AI failed to move:", err);
+            }
         };
-        const receive = () =>{
-            if(! currentMessage) return;
-            console.log("recieved", currentMessage);
-            dispatch(opponentMove(currentMessage.data))
-        };
-        useEffect(receive, [currentMessage]);
-        useEffect(send, [selected, target]);
-    }
+        maybePlayAI();
+    }, [activePlayer, mode]);
 
     useEffect(() => {
         dispatch(setModeAndPlayerNumber({mode, player}));
     }, []);
 
-    // problems when AI takes time thinking her
     useEffect(() => {
         if(target == null) return () => null;
         console.log("setting timeout");

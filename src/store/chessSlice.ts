@@ -1,4 +1,3 @@
-import { getNextMove } from "@/lib/chess-ai";
 import { getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
@@ -158,7 +157,7 @@ function endTurn(state: GameState){
   if(checkState == 1){
     if(state.mode == "network"){
       state.message = `Opponent is in Check.`;
-    }else if(state.mode == "ai"){
+    }else if(state.mode == "ai" && state.activePlayer == 1){
       state.message = `AI is in Check.`;
     }else{
       state.message = `You are in Check.`;
@@ -172,23 +171,9 @@ function endTurn(state: GameState){
   }else{
     state.message = ``;
   }
-
-  // if the opponent is an AI, begin search
-  console.log("CS", checkState) // problem with finding checkmate
-  if(state.mode == "ai" && checkState < 2){
+  
+  if(state.mode == "ai" && state.activePlayer == 1 && checkState < 2){
     state.message += " AI is searching for next move...";
-    aiPlay(state);
-  }
-}
-
-function aiPlay(state: GameState){
-  // TODO: create an artificial delay if to quick
-  const aiMove = getNextMove(true, state.board);
-  if(aiMove == "N/A"){
-    throw new Error("This shouldn't happen: AI searching for move in checkmate or stalemate.");
-  }else{
-    handleOpponentMove(state, {payload: aiMove, type:""});
-    nextTurn();
   }
 }
 
@@ -248,10 +233,6 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
     state.message = '';
   }
 
-  state.activePlayer ^= 1;
-  if(state.activePlayer == 0){
-    state.turnNumber += 1;
-  }
 }
 
 const chessSlice = createSlice({

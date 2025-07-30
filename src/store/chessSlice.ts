@@ -1,5 +1,5 @@
 import { getNextMove } from "@/lib/chess-ai";
-import { inCheck, parseMove, validIndices } from "@/lib/chess-logic";
+import { getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
@@ -29,6 +29,8 @@ export type ChessMove = {
 
 export type CastlingAvailability = 0 | 1 | 2 | 3; // none, left only, right only, both
 
+
+/*
 const initialBoard = [
   "r", "n", "b", "q", "k", "b", "n", "r",
   "p", "p", "p", "p", "p", "p", "p", "p",
@@ -39,18 +41,18 @@ const initialBoard = [
   "P", "P", "P", "P", "P", "P", "P", "P",
   "R", "N", "B", "Q", "K", "B", "N", "R",
 ];
-/*
-const initialBoard = [
-  "r", " ", "k", " ", " ", " ", " ", " ",
-  "p", " ", "b", "p", "p", "Q", "p", "p",
-  " ", "P", " ", " ", " ", "P", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", "p", " ", " ", "p", " ", " ",
-  "P", "P", " ", "P", "P", " ", "P", "P",
-  "R", " ", " ", " ", "K", " ", " ", "R",
-];
 */
+const initialBoard = [
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  "k", " ", " ", " ", " ", "Q", " ", " ",
+  " ", " ", "R", " ", " ", "P", " ", " ",
+  " ", "Q", " ", " ", " ", " ", " ", " ",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", " ", " ", " ", "p", " ", " ",
+  "P", "P", " ", "P", "P", " ", "P", "P",
+  " ", " ", " ", " ", "K", " ", " ", "R",
+];
+
 
 const initialState: GameState = {
     mode: "hotseat",
@@ -152,7 +154,7 @@ function endTurn(state: GameState){
   const isBlackNext = !!state.activePlayer;
   const flipped = (state.mode == "hotseat" && isBlackNext) || (state.mode == "network" && state.myPlayer == 1);
   
-  const checkState = inCheck(isBlackNext, state.board, flipped);
+  const checkState = getCheckState(isBlackNext, state.board, flipped);
   if(checkState == 1){
     if(state.mode == "network"){
       state.message = `Opponent is in Check.`;
@@ -172,6 +174,7 @@ function endTurn(state: GameState){
   }
 
   // if the opponent is an AI, begin search
+  console.log("CS", checkState) // problem with finding checkmate
   if(state.mode == "ai" && checkState < 2){
     state.message += " AI is searching for next move...";
     aiPlay(state);
@@ -181,8 +184,8 @@ function endTurn(state: GameState){
 function aiPlay(state: GameState){
   // TODO: create an artificial delay if to quick
   const aiMove = getNextMove(true, state.board);
-  if(aiMove == null){
-    alert("AI cannot make move");
+  if(aiMove == "N/A"){
+    throw new Error("This shouldn't happen: AI searching for move in checkmate or stalemate.");
   }else{
     handleOpponentMove(state, {payload: aiMove, type:""});
     nextTurn();
@@ -232,7 +235,7 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
   nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
   state.board = nextBoard;
 
-  const checkState = inCheck(!isBlackNext, state.board, !flipped);
+  const checkState = getCheckState(!isBlackNext, state.board, !flipped); // TODO: seem to get getting wrong stalemates here
   if(checkState == 1){
     state.message = `You are in Check.`;
   }else if(checkState == 2){

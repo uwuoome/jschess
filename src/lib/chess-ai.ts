@@ -1,36 +1,7 @@
-import { algebraicNotation, inCheck, pieceName, validIndices } from "./chess-logic";
+import { algebraicNotation, getCheckState, getPlayerMovesAvailable } from "./chess-logic";
 
 const EMPTY = " ";
 
-// all the potential moves a piece at index 'from' can move 'to'
-type PiecePotential = {
-    from: number;
-    to: number[];
-};
-
-type ScoredTarget = {
-    score: number;
-    index: number;
-}
-
-type RankedPieceMoves = {
-    from: number;
-    to: ScoredTarget[],
-};
-
-function getPlayerMovesAvailable(isBlack: boolean, board: string[]): PiecePotential[]{
-    const pieceCodes = isBlack? "prnbkq": "PRNBKQ";
-    const pieceIndices = board.reduce((acc, cur, i: number) => {
-        if(pieceCodes.includes(cur)) acc.push(i);
-        return acc;
-    }, [] as number[]);
-    return pieceIndices.map((i: number) => {
-        return {
-            from: i,
-            to: validIndices(i, board, false, 0) // don't include castling moves for now
-        };
-    }).filter(r => r?.to?.length > 0);
-}
 
 function getTable(pieceName: string){
     // table values measured in centipawns, or 100th of a pawn's value
@@ -115,11 +86,13 @@ const sum = (arr: number[]) => arr.reduce((acc, cur) => acc+cur, 0);
 
 // Assesses a board state and gives it a weight, dependent on the number of pieces and their placement on the board
 // Move evaluation as described by: https://medium.com/dscvitpune/lets-create-a-chess-ai-8542a12afef
-function weighBoard(isBlack: boolean, board: string[]){
-    const checkState = inCheck(isBlack, board, false);
-    if(checkState == 2){
-        return isBlack? -9999: 9999;
-    }    
+function weighBoard(isBlack: boolean, board: string[], movesAvailable: boolean){
+    if(! movesAvailable){
+        const checkState = getCheckState(isBlack, board, false);
+        if(checkState == 2) return isBlack? -9999: 9999;
+        if(checkState == 3) return 0;
+        throw Error("Invalid Check State for when no moves are available: "+checkState);
+    }
     const pc = piecesOnBoard(board);
     // AI is black only for now
     // number of each piece type multipled by its value.
@@ -141,68 +114,6 @@ function weighBoard(isBlack: boolean, board: string[]){
     return material + pLocValue + nLocValue + bLocValue +rLocValue + qLocValue + kLocValue;
 }
 
-/*
-function rankAIMoves(moves: PiecePotential[], board: string[]): RankedPieceMoves[]{
-    function scoreTarget(aiTurn: boolean, board: string[], from: number, to: number){
-        // create an affected board state 
-        const nextBoard = [...board];
-        nextBoard[to] = nextBoard[from];
-        nextBoard[from] = EMPTY;
-
-        // checking if white player, board not flipped
-        const checkState = isInCheck(true, nextBoard, false);
-        if(checkState == 2) return {  // wins or loses game
-            score: aiTurn? 9999: -9999, 
-            index: to
-        }; 
-        // TODO: test for stalement, or insufficient material and return draw
-        // TODO: work out what to do with castling and promotion
-        return {
-            score: weighBoard(true, nextBoard),
-            index: to
-        };  
-    }
-    const scoredMoves = moves.map(piece => {
-        return {
-            from: piece.from,
-            to: piece.to.map(scoreTarget.bind(null, true, board, piece.from))
-        };
-    });
-    return scoredMoves;
-}
-
-function pickBestRankedMove(isBlack: boolean, board: string[]){
-    const aiMoves =  getPlayerMovesAvailable(isBlack, board);
-    const rankedAIMoves = rankAIMoves(aiMoves, board);
-    const pieces = piecesOnBoard(board);
-    function bestMoveForPiece(move: RankedPieceMoves){
-        const pickBest = (acc: ScoredTarget, cur: ScoredTarget) => acc.score > cur.score? acc: cur;
-        const best = move.to.reduce(pickBest, {score:  -99999, index: -1});
-        return {
-            from: move.from,
-            to: best.index,
-            score: best.score
-        };
-    }
-    const bestPieceToMove = (move: any, acc: any) => move.score > acc.score? move: acc;
-    const bestMove = rankedAIMoves.map(bestMoveForPiece).reduce(bestPieceToMove);
-    debugInfo(board, pieces, aiMoves, rankedAIMoves, bestMove);
-}
-
-function debugInfo(board: string[], pieces: Record<string, number[]>, aiMoves: PiecePotential[], 
-                    rankedAIMoves: RankedPieceMoves[], bestMove: {from: number, to: number, score: number}){
-    console.log("piece counts", pieces);
-    console.log(aiMoves.length, "pieces can move");
-    function printMoveScore(moveTo: {index: number, score: number}){
-        return `${algebraicNotation(moveTo.index)}[${moveTo.score}]`; 
-    }
-    rankedAIMoves.forEach(p => {
-      console.log(pieceName(board[p.from]), "at", algebraicNotation(p.from), 
-                "can move to: ", p.to.map(printMoveScore).join(", "));
-    });
-    console.log("Best Move Found: ", algebraicNotation(bestMove.from)+algebraicNotation(bestMove.to), "scores", bestMove.score);
-}
-*/
 
 function nextBoardState(board: string[], from: number, to: number){
     const nextBoard = [...board];
@@ -215,12 +126,12 @@ const algebraic = (move: {from: number, to: number}) => algebraicNotation(move.f
 
 function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
     function quiesce(alpha: number, beta: number, board: string[], isBlack: boolean){
-        const boardValue = weighBoard(isBlack, board);
+        const moves = getPlayerMovesAvailable(isBlack, board);
+        const boardValue = weighBoard(isBlack, board, moves.length > 0);
         if(boardValue >= beta) return beta;
         if(alpha < boardValue){
             alpha = boardValue;
         }
-        const moves =  getPlayerMovesAvailable(isBlack, board);
         const isCapture = (i: number) => isBlack? "pnbrqk".includes(board[i]): "PNBRQK".includes(board[i]);
         for(let key in moves){
             let mp = moves[key];
@@ -240,13 +151,15 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
     function alphaBeta(beta: number, alpha: number, board: string[], depth: number, isBlack: boolean): number{
         //if (depth == 0) return weighBoard(isBlack, board);
         if (depth == 0) return quiesce(alpha, beta, board, isBlack);
-        const checkState = inCheck(isBlack, board, false);
-        if(checkState == 2){
-            console.log("Checkmate found");
-            return isBlack? 9999: -9999;
-        }
         let bestScore = -99998;
-        const moves =  getPlayerMovesAvailable(isBlack, board);
+        const moves = getPlayerMovesAvailable(isBlack, board); // maybe start with this, and if no moves are available check for check
+        if(moves.length == 0){                                 // stalemate or checkmate
+            const checkState = getCheckState(isBlack, board, false, false);
+            if(checkState == 2) return isBlack? 9999: -9999;
+            if(checkState == 3) return 0;
+            throw Error("Invalid Check State for when no moves are available: "+checkState);
+        }
+        // TODO: check for insufficient material
         for(let key in moves){
             let mp = moves[key];
             for(let i=0; i<mp.to.length; i++){
@@ -273,9 +186,8 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
     let alpha = -100000;
     let beta = 100000;    
     const moves = getPlayerMovesAvailable(isBlack, board);
-    if(moves.length == 0){ // game is a stalemate
-        return null;
-    }
+    if(moves.length == 0) return null; // game is a stalemate or checkmate  
+
     moves.forEach(mp => {                                           // for each piece that can be moved
         mp.to.forEach(to => {                                       // for each tile that it can move to
             const nextBoard = nextBoardState(board, mp.from, to);

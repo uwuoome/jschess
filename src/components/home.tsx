@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Input } from "./ui/input";
-import { setMyID, setPreferredGame } from "@/store/settingsSlice";
+import { setMyID} from "@/store/settingsSlice";
 import type { RootState } from "@/store";
 import { Label } from "@radix-ui/react-label";
 

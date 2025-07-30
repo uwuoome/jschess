@@ -1,8 +1,7 @@
-
 /**
  * Provides logic for handling games of chess. 
  * Generates lists of valid moves for given pieces, see: validIndices
- * Checks for check and checkmate: isInCheck
+ * Checks for check and checkmate: getCheckState
  * And converts indices to algebraic notation: algebraicNotation
  * Board representation is a 64 element array of char codes:
    const exampleStartingBoard = [
@@ -16,6 +15,14 @@
         "R", "N", "B", "Q", "K", "B", "N", "R",
     ];
  */
+
+// all the potential moves a piece at index 'from' can move 'to'
+export type PiecePotential = {
+    from: number;
+    to: number[];
+};
+
+
 const EMPTY = " ";
 
 const rowColToIndex = (rc: any[]) => parseInt(rc[0]) * 8 + rc[1];
@@ -272,9 +279,9 @@ function openAdjacent(irBlack: boolean, from: number, board: string[]){
         return pieceIsBlack != irBlack;
     }
     if(row > 0){ // scan above
-        if(col > 0 && valid(board[from-7])) result.push(from-7);
+        if(col > 0 && valid(board[from-9])) result.push(from-9);
         if(valid(board[from-8])) result.push(from-8);
-        if(col < 7 && valid(board[from-9])) result.push(from-9);  
+        if(col < 7 && valid(board[from-7])) result.push(from-7);  
     }    
     if(col > 0 && valid(board[from-1])) result.push(from-1);
     if(col < 7 && valid(board[from+1])) result.push(from+1);
@@ -314,14 +321,13 @@ function allPiecesThatCanTake(irBlack: boolean, board: string[], flipped: boolea
  * @param irBlack whether of not the player to test for check is black; false is white.
  * @param board 64 element array containing board tile state.
  * @param flipped true if the board is flipped upside down (from black player's perspective).
- * @param castling whether castling is available: 0 no, 1 left rook only, 2 right rook only, 3 both rooks.
+ * @param moves optional parameter, defines if moves are available to determine stalemate. If undefined (null) will work to determine.
  * @return 0 not in check, 1 check, 2 checkmate, 3 stalemate.
  */
-export function inCheck(irBlack: boolean, board: string[], flipped: boolean) {
-    function isInStaleMate(){ // returns true if not in check but cannot move
-        return false;         // TODO
-    }
-    const kingIndex = board.indexOf(irBlack?  "k": "K");
+export function getCheckState(irBlack: boolean, board: string[], flipped: boolean, movesAvailable: boolean | null = null) {
+    const isInStaleMate = () => movesAvailable != null? movesAvailable: !playerHasAnyMovesAvailable(irBlack, board);
+    const kingPiece = irBlack?  "k": "K"
+    const kingIndex = board.indexOf(kingPiece);
     if(kingIndex == -1) return isInStaleMate()? 3: 0;
     const checkFrom = pieceThatCanTake(irBlack, board, flipped, kingIndex);
     if(checkFrom == -1) return isInStaleMate()? 3: 0;                       // not in check
@@ -329,10 +335,11 @@ export function inCheck(irBlack: boolean, board: string[], flipped: boolean) {
     const checkRemovedBy = allPiecesThatCanTake(!irBlack, board, flipped, checkFrom); 
     const canTakePieceToRemoveCheck = checkRemovedBy.some((removedByIndex: number) => {
         // need to test for double check here, or if the king captures, that he is not moving into check.
+        const nextKingIndex = board[removedByIndex] == kingPiece? checkFrom: kingIndex;
         const newBoard = [...board];
         newBoard[removedByIndex] = " ";
         newBoard[checkFrom] = board[removedByIndex];
-        const newCheckFrom = pieceThatCanTake(irBlack, newBoard, flipped, kingIndex);
+        const newCheckFrom = pieceThatCanTake(irBlack, newBoard, flipped, nextKingIndex);
         return newCheckFrom == -1;
     });
     // TODO: test for stalemate
@@ -348,4 +355,34 @@ export function inCheck(irBlack: boolean, board: string[], flipped: boolean) {
     });
     if(checkFromIndices.includes(-1)) return 1;                // in check but there's an escape tile 
     return 2;                                                   
+}
+
+
+export function getPlayerMovesAvailable(isBlack: boolean, board: string[]): PiecePotential[]{
+    const pieceCodes = isBlack? "prnbkq": "PRNBKQ";
+    const pieceIndices = board.reduce((acc, cur, i: number) => {
+        if(pieceCodes.includes(cur)) acc.push(i);
+        return acc;
+    }, [] as number[]);
+    return pieceIndices.map((i: number) => {
+        return {
+            from: i,
+            to: validIndices(i, board, false, 0) // don't include castling moves for now
+        };
+    }).filter(r => r?.to?.length > 0);
+}
+
+// this could be where the problem is
+function playerHasAnyMovesAvailable(isBlack: boolean, board: string[]): boolean{
+    const pieceCodes = isBlack? "prnbkq": "PRNBKQ";
+    const pieceIndices = board.reduce((acc, cur, i: number) => {
+        if(pieceCodes.includes(cur)) acc.push(i);
+        return acc;
+    }, [] as number[]);
+    
+    for(let i=0; i<pieceIndices.length; i++){
+        console.log(pieceIndices[i], validIndices(pieceIndices[i], board, false, 0).length);
+        if(validIndices(pieceIndices[i], board, false, 0).length > 0) return true;
+    }
+    return false;
 }

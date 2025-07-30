@@ -187,3 +187,12 @@ main{
   padding: 0;
   padding-left: 20px;
 }
+
+h1{
+  font-size: 48px;
+}
+button, a[data-slot="button"] {
+  user-select: none;
+}
+
+

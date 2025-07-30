@@ -39,7 +39,7 @@ const settingsSlice = createSlice({
   initialState: loadFriendList(),
   reducers: {
     setMyID: (state, action) => {
-        state.myid = action.payload;
+        state.myid = action.payload.toLowerCase();
         saveFriendList(state);
     },
     setPreferredGame: (state, action) => {
@@ -47,11 +47,12 @@ const settingsSlice = createSlice({
         saveFriendList(state);
     },
     addFriend: (state, action) => { 
-        state.list = [...state.list, action.payload];
+        state.list = [...state.list, action.payload.toLowerCase()];
         saveFriendList(state);
     },
     removeFriend: (state, action) => { 
-        state.list = state.list.filter((x: FriendData)  => x.email != action.payload); 
+        const target = action.payload.toLowerCase();
+        state.list = state.list.filter((x: FriendData)  => x.email != target); 
         saveFriendList(state);
     }
   }

@@ -1,4 +1,4 @@
-import { getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
+import { algebraicMove, getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
@@ -17,7 +17,7 @@ export type GameState = {
     board: string[];                      // 64 element char array describing board state
     selected: null | ChessMove;           // selection made
     target: null | number;                // target tile to move to after selection 
-    movesMade: [number, number][];        // log of moves made, for replay or history browsing
+    movesMade: string[];                  // log of moves made in algebraic notation, for replay or history browsing
     message: string;                      // message presented to user
 }
 export type ChessMove = {
@@ -219,6 +219,7 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
   nextBoard[from] = " ";
   nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
   state.board = nextBoard;
+  state.movesMade.push(algebraicMove(from, to));
 
   const checkState = getCheckState(!isBlackNext, state.board, !flipped); // TODO: seem to get getting wrong stalemates here
   if(checkState == 1){
@@ -283,7 +284,7 @@ const chessSlice = createSlice({
           }  
           state.target = targetIndex;
           state.selected.options = [];
-          state.movesMade.push([state.selected.from, targetIndex]);
+          state.movesMade.push(algebraicMove(state.selected.from, targetIndex));
       }else{
         state.selected = null; 
       }

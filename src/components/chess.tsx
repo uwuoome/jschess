@@ -5,6 +5,7 @@ import { movePiece, nextTurn, opponentMove, selectPiece, setModeAndPlayerNumber 
 import React from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import MoveHistory from "./chess-history";
 
 export type ChessProps = {
     mode: "hotseat" | "network" | "ai";
@@ -13,11 +14,31 @@ export type ChessProps = {
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
 
+
 const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
   type: "module",
 });
 
 const DEBUG = 0;
+
+export function piece(code: string){
+    const upper = code.toUpperCase();
+    const colour = code == upper? "W": "B";
+    return `${colour}${upper}.svg`;
+}   
+export function background(isBlack:boolean, index:number, selected: any = null){
+    const canMoveTo = selected?.options.includes(index);
+    const hilite = "border-blue-200"; // TODO: add themes
+    if(canMoveTo){
+        const light = "bg-gray-200";
+        const dark = "bg-gray-500";
+        const bg = isBlack? light: dark; 
+        return `${bg} border-8 border-solid ${hilite}`;
+    }   
+    const light = "bg-white"
+    const dark = "bg-gray-400";
+    return isBlack? light: dark;
+}
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -28,11 +49,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const target = useSelector((state: RootState) => state.chess.target);
     const dispatch = useDispatch();
 
-    function piece(code: string){
-        const upper = code.toUpperCase();
-        const colour = code == upper? "W": "B";
-        return `${colour}${upper}.svg`;
-    }
+
     function move(index: number){ 
         if(mode != "hotseat" && myPlayerNumber != activePlayer) return;
         if(selected == null){
@@ -88,20 +105,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
 
-    function background(isBlack:boolean, index:number){
-        const canMoveTo = selected?.options.includes(index);
-        const hilite = "border-blue-200"; // TODO: add themes
-        if(canMoveTo){
-            const light = "bg-gray-200";
-            const dark = "bg-gray-500";
-            const bg = isBlack? light: dark; 
-            return `${bg} border-8 border-solid ${hilite}`;
-        }   
-        const light = "bg-white"
-        const dark = "bg-gray-400";
-        return isBlack? light: dark;
-    }
-
     function pieceHilite(index: number){
         const canMoveTo = selected?.options.includes(index);
         const bg = selected?.from === index ? `bg-blue-200 ml-2` : "";
@@ -143,7 +146,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
                     </div>
                     ) || ""}
 
-                    <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`} onClick={() => move(index)}>
+                    <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
                     {board[index] !== " " && (
                         <img src={`/chess/${piece(board[index])}`} className={`w-12 h-12 ${pieceHilite(index)}`}
                         />
@@ -191,12 +194,17 @@ function ChessInfo(){
     );
 }
 
-export default function Chess(props: ChessProps) {
+export default function Chess(props: ChessProps) { 
     return (
-    <>
-        <ChessBoard {...props} />
-        <ChessInfo />
-    </>
+    <div className="flex">
+        <div>
+            <ChessBoard {...props} />
+            <ChessInfo />
+        </div>
+        {window.innerWidth > 800 &&
+            <MoveHistory  />
+        }
+    </div>
     );
 };
 

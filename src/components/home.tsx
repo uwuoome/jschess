@@ -59,8 +59,12 @@ export default function Home(){
                 <Button disabled={!validEmail} className={`m-1 mt-6 grow ${!validEmail ? "pointer-events-none opacity-50" : ""}`} asChild>
                      <Link to="/chess/p2p">Network</Link>
                 </Button>
-                <Button className="m-1 mt-6 grow">AI</Button>
-                <Button className="m-1 mt-6 grow">Hotseat</Button>
+                <Button className="m-1 mt-6 grow">
+                    <Link to="/chess/ai">AI</Link>
+                </Button>
+                <Button className="m-1 mt-6 grow">
+                    <Link to="/chess/hotseat">Hotseat</Link>
+                </Button>
             </div>
 
 

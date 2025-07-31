@@ -193,6 +193,7 @@ h1{
 }
 button, a[data-slot="button"] {
   user-select: none;
+  cursor: pointer;
 }
 
 

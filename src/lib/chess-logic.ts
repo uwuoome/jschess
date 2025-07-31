@@ -234,6 +234,10 @@ export function algebraicNotation(index: number){
     return "abcdefgh"[col]+(row+1);
 }
 
+export function algebraicMove(from: number, to: number){
+    return algebraicNotation(from)+algebraicNotation(to);
+}
+
 /**
  * @param algebraic notation string to convert to move in UCI format eg: e1d2 or b1a1q
  * @return [fromIndex, toIndex, extraInfo] 3 element array. From and to indicies are 0 to 63 derived from the 

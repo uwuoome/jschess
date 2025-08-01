@@ -1,59 +1,25 @@
 import type { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import React, { useState } from "react";
-import { background, piece } from "./chess";
-import { parseMove } from "@/lib/chess-logic";
+import { piece } from "./chess";
 import { Button } from "./ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { reconstructBoard } from "@/lib/chess-memory";
+import { parseMove } from "@/lib/chess-logic";
 
 type HistoricBoardProps = {
+    board: string[];
+    irBlack: boolean;
+    move: string;
+}
+
+type HistoricInfoProps =  {
+    closer: (event: React.MouseEvent) => void;
     board: string[];
     irBlack: boolean;
     turn: number;
 }
 
-type HistoricInfoProps = HistoricBoardProps & {
-    closer: (event: React.MouseEvent) => void
-}
-const initialBoard = [
-  "r", "n", "b", "q", "k", "b", "n", "r",
-  "p", "p", "p", "p", "p", "p", "p", "p",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", " ", " ", " ",
-  "P", "P", "P", "P", "P", "P", "P", "P",
-  "R", "N", "B", "Q", "K", "B", "N", "R",
-];
-
-function buildBoard(moveHistory: string[], turn: number){
-    const board = [...initialBoard];
-    for(let i=0; i<moveHistory.length && i<turn; i++){
-        const [from, to] = parseMove(moveHistory[i]) as [number, number];
-        if(moveHistory[i] == "e8g8"){                           // handle castling
-            board[7] = " ";
-            board[5] = "r";
-        }else if(moveHistory[i] == "e8c8"){
-            board[0] = " ";
-            board[3] = "r";
-        }else if(moveHistory[i] == "e1g1"){
-            board[63] = " ";
-            board[61] = "R";
-        }else if(moveHistory[i] == "e1c1"){
-            board[56] = " ";
-            board[59] = "r";
-        }else{
-            board[to] = board[from];
-        }
-        if(board[from] == "p" || board[from] == "P"){           // handle promotion
-            const rowTo = Math.floor(to / 8);
-            if(rowTo == 0 || rowTo == 7){
-                board[to] = board[from] == "p"? "q": "Q";
-            }
-        }
-        board[from] = " ";
-    }
-    return board;
-}
 
 export default function MoveHistory() {
     const mode = useSelector((state: RootState) => state.chess.mode);
@@ -80,26 +46,29 @@ export default function MoveHistory() {
     function hilite(moveIndex: number){
         return moveIndex == selected? "bg-lime-400":"";
     }
-    const board = buildBoard(history, selected+1);
+    function rightBorder(){
+        return selected == -1? "": "border-r-0";
+    }
+    const board = reconstructBoard(history, selected+1);
     return (
         <>
-            <div className="w-40 ml-2 mr-2 border-black border-2 select-none">
+            <ScrollArea className={`w-40 ml-2 mr-0 border-black border-2 select-none max-h-150 font-mono ${rightBorder()}`}>
                 <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Turn</div>
                 <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Move</div>
                 {history.map((mm, i) => (
                     <div className={`no-select cursor-pointer border-b-1 ${hilite(i)}`} onClick={goto.bind(null, i)}>
-                        <div className="w-1/2 inline-block pl-2">
+                        <div className="w-1/2 inline-block pl-2 text-xs">
                             {turnName(i)}
                         </div>
-                        <div className="w-1/2 inline-block pl-2">
+                        <div className="w-1/2 inline-block pl- text-center">
                             {mm}
                         </div>
                     </div>
                 ))}
-            </div>
+            </ScrollArea>
             {selected != -1 && 
             <div>
-                <HistoricBoard board={board} turn={selected+1} irBlack={irBlack} />
+                <HistoricBoard board={board} move={history[selected]} irBlack={irBlack} />
                 <HistoricInfo board={board} turn={selected+1} irBlack={irBlack} closer={closer}  />
             </div>}
         </>
@@ -108,10 +77,25 @@ export default function MoveHistory() {
 
 
 function HistoricBoard(props: HistoricBoardProps){
+    // todo: highlight current move
     const isFlipped = props.irBlack;
     const files = isFlipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
     const ranks = isFlipped ? ["1","2","3","4","5","6","7","8"] : ["8","7","6","5","4","3","2","1"];
-    
+    const [from, to] =  parseMove(props.move) as [number, number];
+
+    function background(isBlack:boolean, index:number){
+        const hasHilite = index == from || index == to;
+        const hilite = "border-lime-400 !pl-0"; // TODO: add themes
+        if(hasHilite){
+            const light = "bg-gray-200";
+            const dark = "bg-gray-500";
+            const bg = isBlack? light: dark; 
+            return `${bg} border-8 border-solid ${hilite}`;
+        }   
+        const light = "bg-white pl-2"
+        const dark = "bg-gray-400 pl-2";
+        return isBlack? light: dark;
+    }
     return (
     <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
         <div />
@@ -138,7 +122,7 @@ function HistoricBoard(props: HistoricBoardProps){
                 <div style={{ position: "relative" }} key={index}>
                     <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index)}`}>
                     {props.board[index] !== " " && (
-                        <img src={`/chess/${piece(props.board[index])}`} className="w-12 h-12 ml-2" />
+                        <img src={`/chess/${piece(props.board[index])}`} className="w-12 h-12" />
                     )}
                     </div>
                 </div>
@@ -173,7 +157,7 @@ function HistoricInfo(props: HistoricInfoProps){
                 Previous Board State
             </span>
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
-                Turn {props.turn} {activePlayer? "Black": "White"}
+                Turn {(Math.floor((props.turn+1) / 2))} {activePlayer? "Black": "White"}
             </span>
             <Button className="h-6 float-right ml-2" onClick={props.closer}>Close</Button>
             <Button className="h-6 float-right ml-2" onClick={exportBoard.bind(null, props.board)}>Export</Button>

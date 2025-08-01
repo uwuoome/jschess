@@ -1,4 +1,5 @@
 import { algebraicMove, getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
+import { getSavedChessState, saveChessState } from "@/lib/chess-memory";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
@@ -141,7 +142,7 @@ function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
   return piece;
 }
 
-/** called when a local human player ends the turn */
+
 function endTurn(state: GameState){
   state.selected = null;
   state.target = null;
@@ -175,6 +176,7 @@ function endTurn(state: GameState){
   if(state.mode == "ai" && state.activePlayer == 1 && checkState < 2){
     state.message += " AI is searching for next move...";
   }
+  saveChessState(state.mode, state);
 }
 
 function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
@@ -220,7 +222,7 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
   nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
   state.board = nextBoard;
   state.movesMade.push(algebraicMove(from, to));
-
+/*
   const checkState = getCheckState(!isBlackNext, state.board, !flipped); // TODO: seem to get getting wrong stalemates here
   if(checkState == 1){
     state.message = `You are in Check.`;
@@ -232,8 +234,7 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
     state.activePlayer = -1;
   }else{
     state.message = '';
-  }
-
+  }*/
 }
 
 const chessSlice = createSlice({
@@ -242,6 +243,12 @@ const chessSlice = createSlice({
   reducers: {
     setModeAndPlayerNumber: (state, action) => {
       const {mode, player} = action.payload;
+      const savedState = getSavedChessState(mode);
+      if(savedState){
+          state = savedState;
+          state.message = "Restored game in progress. "+(state?.message || "");
+          return state;
+      }
       if(! ["network", "hotseat", "ai"].includes(mode)){
         throw Error("Invalid Game Mode: "+mode+" (value must be network, hotseat or ai)");
       }

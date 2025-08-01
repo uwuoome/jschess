@@ -26,19 +26,7 @@ export function piece(code: string){
     const colour = code == upper? "W": "B";
     return `${colour}${upper}.svg`;
 }   
-export function background(isBlack:boolean, index:number, selected: any = null){
-    const canMoveTo = selected?.options.includes(index);
-    const hilite = "border-blue-200"; // TODO: add themes
-    if(canMoveTo){
-        const light = "bg-gray-200";
-        const dark = "bg-gray-500";
-        const bg = isBlack? light: dark; 
-        return `${bg} border-8 border-solid ${hilite}`;
-    }   
-    const light = "bg-white"
-    const dark = "bg-gray-400";
-    return isBlack? light: dark;
-}
+
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
@@ -58,7 +46,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
             dispatch( movePiece(index) );
         }
     }
-
    
     // network play specific hooks
     const send = () => {
@@ -70,13 +57,14 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         if(mode != "network") return;
         if(!currentMessage) return;
         console.log("recieved", currentMessage);
-        dispatch(opponentMove(currentMessage.data))
+        dispatch(opponentMove(currentMessage.data));
+        dispatch(nextTurn());
     };
     useEffect(receive, [currentMessage]);
     useEffect(send, [selected, target]);
 
     // ai play specific hooks
-    useEffect(() => {
+    useEffect(() => {        
         if (mode != "ai" || activePlayer != 1) return;
         const start = Date.now();
         const searchDepth = 6;
@@ -105,6 +93,20 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
 
+    function background(isBlack:boolean, index:number, selected: any = null){
+        const canMoveTo = selected?.options.includes(index);
+        const hilite = "border-blue-200"; // TODO: add themes
+        if(canMoveTo){
+            const light = "bg-gray-200";
+            const dark = "bg-gray-500";
+            const bg = isBlack? light: dark; 
+            return `${bg} border-8 border-solid ${hilite}`;
+        }   
+        const light = "bg-white"
+        const dark = "bg-gray-400";
+        return isBlack? light: dark;
+    }
+
     function pieceHilite(index: number){
         const canMoveTo = selected?.options.includes(index);
         const bg = selected?.from === index ? `bg-blue-200 ml-2` : "";
@@ -116,7 +118,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const files = isFlipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
     const ranks = isFlipped ? ["1","2","3","4","5","6","7","8"] : ["8","7","6","5","4","3","2","1"];
     return (
-    <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
+    <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200 font-mono">
         <div />
         {files.map((file, i) => (
         <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">

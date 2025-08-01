@@ -1,19 +1,22 @@
 import type { WebRTCMessage } from "@/hooks/use-p2p";
 import { algebraicNotation } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
-import { movePiece, nextTurn, opponentMove, selectPiece, setModeAndPlayerNumber } from "@/store/chessSlice";
+import { initGame, endGame, movePiece, nextTurn, opponentMove, selectPiece } from "@/store/chessSlice";
 import React from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MoveHistory from "./chess-history";
+import { Button } from "./ui/button";
 
-export type ChessProps = {
+export type InitProps = {
     mode: "hotseat" | "network" | "ai";
     player: 0 | 1;
+}
+
+export type ChessProps = InitProps & {
     sendMessage?: (msg: WebRTCMessage) => void;// network transmit only for network mode
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
-
 
 const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
   type: "module",
@@ -82,7 +85,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }, [activePlayer, mode]);
 
     useEffect(() => {
-        dispatch(setModeAndPlayerNumber({mode, player}));
+        dispatch(initGame({mode, player}));
     }, []);
 
     useEffect(() => {
@@ -173,14 +176,22 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     );
 }
 
-function ChessInfo(){
+function ChessInfo(props: InitProps){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const turnNumber = useSelector((state: RootState) => state.chess.turnNumber);
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
+    const dispatch = useDispatch();
 
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
+    function leave(){
+        if(! confirm("Are you sure you want to concede?")) return;
+        dispatch(endGame(true));
+    }
+    function restart(){
+        dispatch(initGame(props));
+    }
     return (
         <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-136 font-bold select-none">
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
@@ -192,6 +203,11 @@ function ChessInfo(){
             {message  && <span className="m-1 pl-2 pr-2 border-solice border-1 border-red-950 rounded-sm bg-red-500 font-bold text-white">
                 {message}
             </span>}
+            {activePlayer >= 0 && 
+                <Button className="h-6 float-right" onClick={leave}>Concede</Button>
+            ||
+                <Button className="h-6 float-right" onClick={restart}>New Game</Button>
+            }
         </div>
     );
 }
@@ -201,7 +217,7 @@ export default function Chess(props: ChessProps) {
     <div className="flex">
         <div>
             <ChessBoard {...props} />
-            <ChessInfo />
+            <ChessInfo mode={props.mode} player={props.player} />
         </div>
         {window.innerWidth > 800 &&
             <MoveHistory  />

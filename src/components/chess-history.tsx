@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { piece } from "./chess";
 import { Button } from "./ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { reconstructBoard } from "@/lib/chess-memory";
 import { parseMove } from "@/lib/chess-logic";
 
 type HistoricBoardProps = {
@@ -20,6 +19,47 @@ type HistoricInfoProps =  {
     turn: number;
 }
 
+/**
+ * Reconstructs a board state from a move list, up until the given turn number or last turn.
+ */
+export function reconstructBoard(moveHistory: string[], turn: number = 9999){
+    const board = [
+        "r", "n", "b", "q", "k", "b", "n", "r",
+        "p", "p", "p", "p", "p", "p", "p", "p",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        " ", " ", " ", " ", " ", " ", " ", " ",
+        "P", "P", "P", "P", "P", "P", "P", "P",
+        "R", "N", "B", "Q", "K", "B", "N", "R",
+    ];
+    for(let i=0; i<moveHistory.length && i<turn; i++){
+        const [from, to] = parseMove(moveHistory[i]) as [number, number];
+        if(moveHistory[i] == "e8g8"){                           // handle castling
+            board[7] = " ";
+            board[5] = "r";
+        }else if(moveHistory[i] == "e8c8"){
+            board[0] = " ";
+            board[3] = "r";
+        }else if(moveHistory[i] == "e1g1"){
+            board[63] = " ";
+            board[61] = "R";
+        }else if(moveHistory[i] == "e1c1"){
+            board[56] = " ";
+            board[59] = "r";
+        }else{
+            board[to] = board[from];
+        }
+        if(board[from] == "p" || board[from] == "P"){           // handle promotion
+            const rowTo = Math.floor(to / 8);
+            if(rowTo == 0 || rowTo == 7){
+                board[to] = board[from] == "p"? "q": "Q";
+            }
+        }
+        board[from] = " ";
+    }
+    return board;
+}
 
 export default function MoveHistory() {
     const mode = useSelector((state: RootState) => state.chess.mode);
@@ -56,7 +96,7 @@ export default function MoveHistory() {
                 <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Turn</div>
                 <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Move</div>
                 {history.map((mm, i) => (
-                    <div className={`no-select cursor-pointer border-b-1 ${hilite(i)}`} onClick={goto.bind(null, i)}>
+                    <div key={i} className={`no-select cursor-pointer border-b-1 ${hilite(i)}`} onClick={goto.bind(null, i)}>
                         <div className="w-1/2 inline-block pl-2 text-xs">
                             {turnName(i)}
                         </div>

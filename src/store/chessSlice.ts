@@ -1,5 +1,4 @@
 import { algebraicMove, getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
-import { getSavedChessState, saveChessState } from "@/lib/chess-memory";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
@@ -176,7 +175,7 @@ function endTurn(state: GameState){
   if(state.mode == "ai" && state.activePlayer == 1 && checkState < 2){
     state.message += " AI is searching for next move...";
   }
-  saveChessState(state.mode, state);
+
 }
 
 function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
@@ -241,22 +240,15 @@ const chessSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    setModeAndPlayerNumber: (state, action) => {
-      const {mode, player} = action.payload;
-      const savedState = getSavedChessState(mode);
-      if(savedState){
-          state = savedState;
-          state.message = "Restored game in progress. "+(state?.message || "");
-          return state;
-      }
-      if(! ["network", "hotseat", "ai"].includes(mode)){
-        throw Error("Invalid Game Mode: "+mode+" (value must be network, hotseat or ai)");
-      }
-      if(! [0, 1].includes(player)){
-        throw Error("Invalid Player: "+player+" (value must be 0 or 1)");
-      }
-      state.mode = mode;
-      state.myPlayer = player;
+    initGame: (state, action) => {
+      const message = action.payload.movesMade? "Restored game in progress. "+(action.payload.message || "")  :"";
+      return { ...initialState, ...action.payload, message };
+    },
+    endGame: (state, action) => {
+      const concede = !!action.payload;
+      const activeName = state.activePlayer == 1? "Black": "White";
+      state.message = concede? activeName+" concedes.": activeName+" left.";
+      state.activePlayer = -1;
     },
     selectPiece: (state, action) => {
       if(state.selected || state.target) return; 
@@ -301,5 +293,5 @@ const chessSlice = createSlice({
   }
 });
 
-export const { setModeAndPlayerNumber, selectPiece, movePiece, nextTurn, opponentMove} = chessSlice.actions;
+export const { initGame, endGame, selectPiece, movePiece, nextTurn, opponentMove} = chessSlice.actions;
 export default chessSlice.reducer;

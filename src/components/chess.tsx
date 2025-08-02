@@ -18,9 +18,10 @@ export type ChessProps = InitProps & {
     currentMessage?: WebRTCMessage | null;     // current message network only
 }
 
-const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
+export const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
   type: "module",
 });
+console.log("AI worker init");
 
 const DEBUG = 0;
 
@@ -66,35 +67,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     useEffect(receive, [currentMessage]);
     useEffect(send, [selected, target]);
 
-    // ai play specific hooks
-    useEffect(() => {        
-        if (mode != "ai" || activePlayer != 1) return;
-        const start = Date.now();
-        const searchDepth = 6;
-        AiWorker.onmessage = (e) => {
-            const aiMove = e.data.move;
-            const seconds = ((Date.now() - start) / 1000).toFixed(3);
-            console.log(`${seconds} seconds to find move at search depth ${searchDepth} with js minmax ai.`);
-            dispatch(opponentMove(aiMove));
-            dispatch(nextTurn());
-        };
-        AiWorker.onerror = (err) => {
-            console.error("AI worker failed:", err);
-        };
-        AiWorker.postMessage({ board, depth: searchDepth });
-    }, [activePlayer, mode]);
-
     useEffect(() => {
         dispatch(initGame({mode, player}));
     }, []);
-
-    useEffect(() => {
-        // Create an artifical delay between players' turns.
-        if(target == null) return () => null;
-        console.log("Setting timeout");
-        const timeout = setTimeout( () => dispatch(nextTurn()), 800 );
-        return () => clearTimeout(timeout); 
-    }, [target, dispatch]);
 
     function background(isBlack:boolean, index:number, selected: any = null){
         const canMoveTo = selected?.options.includes(index);
@@ -185,11 +160,13 @@ function ChessInfo(props: InitProps){
     const dispatch = useDispatch();
 
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
+    // TODO: sort out leaving and restarting in network mode
     function leave(){
         if(! confirm("Are you sure you want to concede?")) return;
         dispatch(endGame(true));
     }
     function restart(){
+        dispatch(endGame(true));
         dispatch(initGame(props));
     }
     return (

@@ -233,9 +233,10 @@ export function getNextMove(isBlack: boolean, board: string[], searchDepth: numb
 }
 
 /**
- * Aysnchronous search for AI move
+ * Aysnchronous search for AI move. Uses synchronous search but can be aborted.
  */
-export async function getAiMove(board: string[], searchDepth: number = 4, minDelay: number = 800): Promise<string> {
+export async function getAiMove(board: string[], searchDepth: number = 4, minDelay: number = 800, signal?: AbortSignal): 
+                                    Promise<string> {
   const delay = new Promise<void>(resolve => setTimeout(resolve, minDelay));
   let aiMove: string | null = null;
 
@@ -247,6 +248,8 @@ export async function getAiMove(board: string[], searchDepth: number = 4, minDel
   });
 
   await Promise.all([aiPromise, delay]);
+
+  if (signal?.aborted) throw new Error("Aborted");
 
   if (aiMove == null) {
     throw new Error("AI move is unexpectedly null.");

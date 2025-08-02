@@ -221,26 +221,13 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
   nextBoard[to] = getPieceAfterPromotion(moving, extra == "q");
   state.board = nextBoard;
   state.movesMade.push(algebraicMove(from, to));
-/*
-  const checkState = getCheckState(!isBlackNext, state.board, !flipped); // TODO: seem to get getting wrong stalemates here
-  if(checkState == 1){
-    state.message = `You are in Check.`;
-  }else if(checkState == 2){
-    state.message = `Checkmate: ${isBlackNext? 'White': 'Black'} Wins!`;
-    state.activePlayer = -1;
-  }else if(checkState == 3){
-    state.message = `Stalemate: Draw`;
-    state.activePlayer = -1;
-  }else{
-    state.message = '';
-  }*/
 }
 
 const chessSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    initGame: (state, action) => {
+    initGame: (_state, action) => {
       const message = action.payload.movesMade? "Restored game in progress. "+(action.payload.message || "")  :"";
       return { ...initialState, ...action.payload, message };
     },

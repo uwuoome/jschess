@@ -47,7 +47,11 @@ const settingsSlice = createSlice({
         saveFriendList(state);
     },
     addFriend: (state, action) => { 
-        state.list = [...state.list, action.payload.toLowerCase()];
+        const name = action.payload.name?.trim();
+        const email = action.payload.email?.trim().toLowerCase();
+        if(! (name && email)) throw Error("Friend added requires both name and email set");
+
+        state.list = [...state.list, {name, email}];
         saveFriendList(state);
     },
     removeFriend: (state, action) => { 

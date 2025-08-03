@@ -23,6 +23,7 @@ function FriendAdder(){
     const dispatch = useDispatch();
 
     function handleAdd(){
+        console.log("ADD FRIEND", name, email);
         if(friends.find((f: FriendData) => f.email == email) != null){
             // TODO: make existing row flash
             return; 

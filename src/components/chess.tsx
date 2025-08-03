@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import MoveHistory from "./chess-history";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
-import { Spinner, type SpinnerProps } from '@/components/ui/shadcn-io/spinner';
+import { Spinner } from '@/components/ui/shadcn-io/spinner';
 
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
@@ -174,13 +174,12 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     );
 }
 
-function ChessInfo(props: InitProps){
+function ChessInfo(){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const turnNumber = useSelector((state: RootState) => state.chess.turnNumber);
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
-
 
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     // TODO: sort out leaving and restarting in network mode
@@ -235,7 +234,7 @@ export default function Chess(props: ChessProps) {
     <div className="flex">
         <div>
             <ChessBoard {...props} />
-            <ChessInfo mode={props.mode} player={props.player} />
+            <ChessInfo />
             <ChessActions mode={props.mode} player={props.player} />
         </div>
         {window.innerWidth > 1200 &&

@@ -17,7 +17,7 @@ function App() {
       <Router>
         <SidebarProvider>
           <AppSidebar />
-          <main className="w-1/1 m-0 p-10">
+          <main className={`w-1/1 m-0 p-10`}>
             <SidebarTrigger />
             <Routes>
               <Route path="/" element={<Home />} />

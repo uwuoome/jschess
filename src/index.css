@@ -188,6 +188,12 @@ main{
   padding-left: 20px;
 }
 
+@media(width < 500px){
+  main {
+    padding-left: 0px;
+  }
+}
+
 h1{
   font-size: 48px;
 }

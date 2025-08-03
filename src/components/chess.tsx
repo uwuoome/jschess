@@ -7,6 +7,8 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MoveHistory from "./chess-history";
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
+import { Spinner, type SpinnerProps } from '@/components/ui/shadcn-io/spinner';
 
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
@@ -16,6 +18,7 @@ export type InitProps = {
 export type ChessProps = InitProps & {
     sendMessage?: (msg: WebRTCMessage) => void;// network transmit only for network mode
     currentMessage?: WebRTCMessage | null;     // current message network only
+    mobile?: boolean;
 }
 
 export const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
@@ -31,9 +34,10 @@ export function piece(code: string){
     return `${colour}${upper}.svg`;
 }   
 
+const mobile = () =>  window.innerWidth < 600;
 
 function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
-
+    
     const myPlayerNumber = useSelector((state: RootState) => state.chess.myPlayer);
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const board = useSelector((state: RootState) => state.chess.board);
@@ -80,31 +84,42 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }, [target, dispatch]);
 
     function background(isBlack:boolean, index:number, selected: any = null){
+        const size = mobile()? "w-11 h-11": "w-16 h-16";
+        const prefix = size+" content-center "; 
         const canMoveTo = selected?.options.includes(index);
         const hilite = "border-blue-200"; // TODO: add themes
         if(canMoveTo){
             const light = "bg-gray-200";
             const dark = "bg-gray-500";
             const bg = isBlack? light: dark; 
-            return `${bg} border-8 border-solid ${hilite}`;
+            return `${prefix}${bg} border-8 border-solid ${hilite}`;
         }   
         const light = "bg-white"
         const dark = "bg-gray-400";
-        return isBlack? light: dark;
+        return prefix+(isBlack? light: dark);
     }
 
-    function pieceHilite(index: number){
+    function pieceDisplay(index: number){
+        const scale = mobile()? "w-8 h-8": "w-12 h-12"; 
         const canMoveTo = selected?.options.includes(index);
         const bg = selected?.from === index ? `bg-blue-200 ml-2` : "";
-        if(bg) return bg;
-        return canMoveTo? "ml-0": "ml-2";
+        if(bg) return `${scale} ${bg}`;
+        const ml = canMoveTo? "ml-0": "ml-2";
+        return `${scale} ${ml}`;
     }
 
     const isFlipped = (mode == "hotseat" && activePlayer == 1) || (mode == "network" && myPlayerNumber == 1);
     const files = isFlipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
     const ranks = isFlipped ? ["1","2","3","4","5","6","7","8"] : ["8","7","6","5","4","3","2","1"];
+    //grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] 
     return (
-    <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200 font-mono">
+    <div className="max-w-full overflow-auto mx-auto">
+    <div className="grid border-0 border-black w-fit select-none bg-gray-200 font-mono"
+        style={{
+            gridTemplateColumns: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
+            gridTemplateRows: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
+        }}
+    >
         <div />
         {files.map((file, i) => (
         <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
@@ -133,10 +148,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
                         {index}
                     </div>
                     ) || ""}
-
-                    <div className={`w-16 h-16 content-center ${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
+                    <div className={`${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
                     {board[index] !== " " && (
-                        <img src={`/chess/${piece(board[index])}`} className={`w-12 h-12 ${pieceHilite(index)}`}
+                        <img src={`/chess/${piece(board[index])}`} className={pieceDisplay(index)}
                         />
                     )}
                     </div>
@@ -156,6 +170,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         ))}
         <div />
     </div>
+    </div>
     );
 }
 
@@ -165,10 +180,32 @@ function ChessInfo(props: InitProps){
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
-    const dispatch = useDispatch();
+
 
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     // TODO: sort out leaving and restarting in network mode
+
+    return (
+        <div className="mt-2 p-2 border-solid border-0 border-gray-500 w-136 max-w-screen font-bold select-none">
+            <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
+                Turn {turnNumber} {activePlayer? "Black": "White"}
+            </span>
+            {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
+                {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
+            </span>}
+            {message  && <div className="m-1 pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
+                {message}
+                
+                {message.indexOf("AI is searching") != -1 && <Spinner key='infinite' variant='infinite' className="float-right" />}
+            </div>}
+
+        </div>
+    );
+}
+
+function ChessActions(props: InitProps){
+    const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
+    const dispatch = useDispatch();
     function leave(){
         if(! confirm("Are you sure you want to concede?")) return;
         dispatch(endGame(true));
@@ -177,24 +214,20 @@ function ChessInfo(props: InitProps){
         dispatch(endGame(true));
         dispatch(initGame(props));
     }
+    function history(){
+        alert("TODO: Show move history for mobile");
+    }
     return (
-        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-136 font-bold select-none">
-            <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
-                Turn {turnNumber} {activePlayer? "Black": "White"}
-            </span>
-            {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
-                {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
-            </span>}
-            {message  && <span className="m-1 pl-2 pr-2 border-solice border-1 border-red-950 rounded-sm bg-red-500 font-bold text-white">
-                {message}
-            </span>}
-            {activePlayer >= 0 && 
-                <Button className="h-6 float-right" onClick={leave}>Concede</Button>
-            ||
-                <Button className="h-6 float-right" onClick={restart}>New Game</Button>
-            }
+        <div className={`${mobile()? "absolute bottom-2 right-2": ""}`}>
+            {activePlayer >= 0 && <>
+                {mobile() && <Button className="mr-2" onClick={history}>View History</Button>}
+                <Button className="" onClick={leave}>Concede</Button>
+            </> || <>
+                <Button className="mr-2"><Link to="/">Home</Link></Button>
+                <Button className="" onClick={restart}>New Game</Button>
+            </>}
         </div>
-    );
+    )
 }
 
 export default function Chess(props: ChessProps) { 
@@ -203,8 +236,9 @@ export default function Chess(props: ChessProps) {
         <div>
             <ChessBoard {...props} />
             <ChessInfo mode={props.mode} player={props.player} />
+            <ChessActions mode={props.mode} player={props.player} />
         </div>
-        {window.innerWidth > 800 &&
+        {window.innerWidth > 1200 &&
             <MoveHistory  />
         }
     </div>

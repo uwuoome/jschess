@@ -35,8 +35,10 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
         return next(action);
     }
     const result = next(action);
-    if(action.type === 'game/nextTurn'){
-        const state = store.getState();
+    const state = store.getState();
+
+    const aiStarts = action.type == 'game/initGame' &&  state.chess.activePlayer == 1;
+    if(action.type == 'game/nextTurn' || aiStarts){
         if(state.chess.mode == "ai" && state.chess.activePlayer == 1){
             const start = Date.now();
             AiWorker.onmessage = (e) => {

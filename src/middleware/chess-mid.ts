@@ -29,7 +29,7 @@ const chessStorageMiddleware = (store: any) => (next: any) => (action: any) => {
 }   
 
 const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
-    const searchDepth = 6;
+    const searchDepth = 4;
     if(action.type == 'game/endGame'){
         AiWorker.postMessage({ stop: true });
         return next(action);

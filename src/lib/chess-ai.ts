@@ -37,14 +37,14 @@ function getTable(pieceName: string){
         -20, -10, -10, -10, -10, -10, -10, -20
     ];
     const rookTable = [
-        0,   0,   5,  10,  10,   5,   0,   0,
+         0,   0,   5,  10,  10,   5,   0,   0,
         -5,   0,   0,   0,   0,   0,   0,  -5,
         -5,   0,   0,   0,   0,   0,   0,  -5,
         -5,   0,   0,   0,   0,   0,   0,  -5,
         -5,   0,   0,   0,   0,   0,   0,  -5,
         -5,   0,   0,   0,   0,   0,   0,  -5,
-        5,  10,  10,  10,  10,  10,  10,   5,
-        0,   0,   0,   0,   0,   0,   0,   0
+         5,  10,  10,  10,  10,  10,  10,   5,
+         0,   0,   0,   0,   0,   0,   0,   0
     ];
     const queenTable = [
         -20, -10, -10, -5, -5, -10, -10, -20,
@@ -148,9 +148,10 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
         }
         return alpha; 
     }
-    function alphaBeta(beta: number, alpha: number, board: string[], depth: number, isBlack: boolean): number{
-        //if (depth == 0) return weighBoard(isBlack, board);
-        if (depth == 0) return quiesce(alpha, beta, board, isBlack);
+    function alphaBeta(alpha: number, beta: number, board: string[], depth: number, isBlack: boolean): number{
+        if (depth == 0){
+            return quiesce(alpha, beta, board, isBlack);
+        }
         let bestScore = -99998;
         const moves = getPlayerMovesAvailable(isBlack, board); // maybe start with this, and if no moves are available check for check
         if(moves.length == 0){                                 // stalemate or checkmate
@@ -164,8 +165,7 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
             let mp = moves[key];
             for(let i=0; i<mp.to.length; i++){
                 const nextBoard = nextBoardState(board, mp.from, mp.to[i]);
-                const score = -alphaBeta(-beta, -alpha, nextBoard, depth-1, isBlack);
-                //console.log("sub", algebraic({from: mp.from, to: mp.to[i]}), score);
+                const score = -alphaBeta(-beta, -alpha, nextBoard, depth-1, !isBlack);
                 if(score >= beta){
                     return score;
                 }
@@ -200,8 +200,7 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
                 alpha = boardValue;
             }
             console.log(algebraic({from: mp.from, to}), boardValue);
-        });
-        
+        }); 
     });
     return bestMove;
 }

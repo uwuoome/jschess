@@ -71,6 +71,14 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         dispatch(initGame({mode, player}));
     }, []);
 
+    useEffect(() => {
+        // Create an artifical delay between players' turns.
+        if(target == null) return () => null;
+        console.log("Setting timeout");
+        const timeout = setTimeout( () => dispatch(nextTurn()), 800 );
+        return () => clearTimeout(timeout); 
+    }, [target, dispatch]);
+
     function background(isBlack:boolean, index:number, selected: any = null){
         const canMoveTo = selected?.options.includes(index);
         const hilite = "border-blue-200"; // TODO: add themes

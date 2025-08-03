@@ -2,7 +2,7 @@
 import { configureStore} from '@reduxjs/toolkit';
 import friendsReducer from './settingsSlice';
 import chessReducer from './chessSlice';
-import { chessAIMiddleware, chessDelayMiddleware, chessStorageMiddleware } from '@/middleware/persistence';
+import { chessAIMiddleware, chessStorageMiddleware } from '@/middleware/chess-mid';
 
 
 export const store = configureStore({
@@ -13,7 +13,6 @@ export const store = configureStore({
   middleware: getDefaultMiddleware => getDefaultMiddleware().concat(
     chessStorageMiddleware, 
     chessAIMiddleware, 
-    chessDelayMiddleware
   )
 });
 

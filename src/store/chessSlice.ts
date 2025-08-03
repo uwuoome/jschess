@@ -229,7 +229,8 @@ const chessSlice = createSlice({
   reducers: {
     initGame: (_state, action) => {
       const message = action.payload.movesMade? "Restored game in progress. "+(action.payload.message || "")  :"";
-      return { ...initialState, ...action.payload, message };
+      const args = (action.payload.player == null)? action.payload: {mode: action.payload.mode, myPlayer: action.payload.player};
+      return { ...initialState, ...args, message};
     },
     endGame: (state, action) => {
       const concede = !!action.payload;

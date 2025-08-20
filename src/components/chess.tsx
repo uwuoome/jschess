@@ -21,7 +21,7 @@ export type ChessProps = InitProps & {
     mobile?: boolean;
 }
 
-export const AiWorker = new Worker(new URL("@/workers/aiWorker.ts", import.meta.url), {
+export const AiWorker = new Worker(new URL("@/workers/ai-worker.ts", import.meta.url), {
   type: "module",
 });
 console.log("AI worker init");

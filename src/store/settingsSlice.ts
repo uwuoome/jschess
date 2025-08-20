@@ -4,11 +4,13 @@ import { createSlice } from '@reduxjs/toolkit';
 export type FriendData = {name: string, email: string}
 type SettingsState = {
     myid: string;
+    mytoken: string;
     game: string;
     list: FriendData[];
 };
 const initialState: SettingsState = {
     myid: "",
+    mytoken: "",
     game: "chess",
     list: [],
 };
@@ -34,13 +36,24 @@ function loadFriendList() {
     }
 }
 
+// TODO: move state saving from store to middleware
 const settingsSlice = createSlice({
   name: 'friends',
   initialState: loadFriendList(),
   reducers: {
     setMyID: (state, action) => {
-        state.myid = action.payload.toLowerCase();
-        saveFriendList(state);
+        if(action.payload == null){ /// delete id
+            state.myid = "";
+            state.token = "";
+            saveFriendList(state);
+            return;
+        }
+        if(! (action.payload.id && action.payload.token)){
+            return;
+        }
+        state.myid = action.payload.id;
+        state.mytoken = action.payload.token;
+        saveFriendList(state); 
     },
     setPreferredGame: (state, action) => {
         state.game = action.payload;

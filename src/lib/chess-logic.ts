@@ -234,6 +234,11 @@ export function algebraicNotation(index: number){
     return "abcdefgh"[col]+(row+1);
 }
 
+/**
+ * @param from Once dimensional index (0 to 63).
+ * @param to Once dimensional index (0 to 63).
+ * @return long algebraic notation for the move.
+ */
 export function algebraicMove(from: number, to: number){
     return algebraicNotation(from)+algebraicNotation(to);
 }

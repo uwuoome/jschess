@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -200,7 +201,16 @@ h1{
 h2{
   font-size: 24px;
 }
+h3{
+  font-size: 20px;
+
+}
 button, a[data-slot="button"] {
   user-select: none;
   cursor: pointer;
+}
+
+p, h1, h2, h3{
+  margin-top: 4px;
+  margin-bottom: 8px;
 }

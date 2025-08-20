@@ -8,6 +8,7 @@ const RECONNECT_PERIOD = 5000;// ms
 const RECONNECT_ATTEMPTS = 8;
 
 type ConnectionProps = {
+    mytoken: string;
     myid: string;
     seekingID: string | null;
     gameID: string | null;
@@ -30,7 +31,7 @@ export type WebRTCMessage = {
     data: any;
 }
 
-export function useP2P({myid, seekingID, gameID, onOpponentLeave, onMessage, onInit, onRespond}: ConnectionProps) {
+export function useP2P({myid, mytoken, seekingID, gameID, onOpponentLeave, onMessage, onInit, onRespond}: ConnectionProps) {
     const socketRef = useRef<any>(null);      // our socket ref
     const peerRef = useRef<any>(null);        // peer WebRTC Handle
     const peerSocketRef = useRef<any>(null);  // peer socket ref
@@ -74,7 +75,7 @@ export function useP2P({myid, seekingID, gameID, onOpponentLeave, onMessage, onI
 
         function onConnect() {
             console.log("On socket connect", myid, "to", seekingID);
-            socketRef.current.emit('join', { requesterID: myid, seekingID, gameID });
+            socketRef.current.emit('join', { requesterToken: mytoken, seekingID, gameID });
         }
 
         function onPeerJoin(peerSocketID: string) {

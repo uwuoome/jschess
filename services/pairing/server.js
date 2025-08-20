@@ -24,7 +24,7 @@ app.get('/check', check)
 app.get('/', info);
 
 const server = http.createServer(app);
-if(USE_REPL) startReplServer();
+if(USE_REPL) startReplServer(server);
 
 export const io = new Server(server, {
   cors: corsOptions

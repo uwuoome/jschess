@@ -39,7 +39,7 @@ export function join(req, res){
     console.log("handle", handle);
     if(handle == "") return httperr(res, 200, "no handle");
     if(! handleAvailable(handle)) return httperr(res, 200, "in use");
-    const hash = createPlayer(handle);
+    const hash = createPlayer(handle, req.ip);
     if(hash == null) return httperr(res, 500, "database error");
     return httpok(res, {handle, token: hash});
 }

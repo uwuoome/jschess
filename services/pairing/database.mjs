@@ -11,7 +11,10 @@ db.exec(
         name TEXT UNIQUE NOT NULL,
         hash TEXT NOT NULL,
         elo INTEGER NOT NULL DEFAULT 1500,
-        created DATETIME DEFAULT CURRENT_TIMESTAMP
+        created DATETIME DEFAULT CURRENT_TIMESTAMP,
+        last DATETIME DEFAULT CURRENT_TIMESTAMP,
+        create_ip TEXT NOT NULL,
+        last_ip TEXT NOT NULL
     ) `
 );
 
@@ -27,7 +30,7 @@ function loadPlayers(){
     return {lookup, players};
 }
 
-export function createPlayer(name){
+export function createPlayer(name, ip){
     name = name.trim();
     if(players.has(name)){
         console.error("player with handle", name, "already exists"); 
@@ -40,10 +43,11 @@ export function createPlayer(name){
     }
     const created = (new Date()).toISOString();
     const hash = bcrypt.hashSync(name+created+process.env.USER_SALT, 10);
-    const player = {name, elo: 1500, created, hash};
-    const stmt = db.prepare("INSERT INTO players (name, hash, created) VALUES (?, ?, ?)");
+    const player = {name, elo: 1500, created, last: created, hash, create_ip: ip, last_ip: ip};
+    const sql = "INSERT INTO players (name, hash, created, last, create_ip, last_ip) VALUES (?, ?, ?, ?, ?, ?)";
     try{
-        const info = stmt.run(name, hash, created);
+        const stmt = db.prepare(sql);
+        const info = stmt.run(name, hash, created, created, ip, ip);
     }catch(error){
         console.error(error);
         return null;
@@ -51,6 +55,24 @@ export function createPlayer(name){
     lookup.set(hash, name);
     players.set(name, player);
     return hash;
+}
+
+export function checkIn(name, ip){
+    const now = (new Date()).toISOString();
+    try{
+        const stmt = db.prepare("UPDATE players SET last=?, last_ip=? WHERE name=?");
+        const info = stmt.run(now, ip, name);
+        if(info.changes == 0){
+            console.log(name, "could not check in");
+        }else{
+            console.log(name, "check in at", now, "from", ip);
+            const player = players.get(name);
+            player.last = now;
+            player.last_ip = ip;
+        }
+    }catch(error){
+        console.log(error);
+    }
 }
 
 export function getPlayerByHash(hash){

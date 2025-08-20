@@ -3,7 +3,7 @@ import repl from 'repl';
 import {numPlayerHandles, listPlayerHandles, createPlayer, getPlayerByName, resetDatabase} from './database.mjs';
 
 
-export function startReplServer(){
+export function startReplServer(server){
     const replServer = repl.start({
         prompt: '> ',
     });

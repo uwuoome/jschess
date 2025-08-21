@@ -9,6 +9,8 @@ lerna-debug.log*
 
 services/pairing/node_modules
 *.env
+*.env.development
+*.env.production
 *.db
 
 node_modules

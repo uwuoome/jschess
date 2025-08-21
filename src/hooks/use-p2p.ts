@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import SimplePeer from 'simple-peer/simplepeer.min.js';
 
-const SERVER_URL = 'http://localhost:3000';
-const DEBUG_P2P = true;
+const SERVER_URL = import.meta.env.VITE_PAIRING_SERVER;
+const DEBUG_P2P = import.meta.env.VITE_DEBUG_LEVEL || 0;
 const RECONNECT_PERIOD = 5000;// ms
 const RECONNECT_ATTEMPTS = 8;
 

@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 
-export type FriendData = {name: string, email: string}
+export type FriendData = {name: string, handle: string}
 type SettingsState = {
     myid: string;
     mytoken: string;
@@ -61,15 +61,14 @@ const settingsSlice = createSlice({
     },
     addFriend: (state, action) => { 
         const name = action.payload.name?.trim();
-        const email = action.payload.email?.trim().toLowerCase();
-        if(! (name && email)) throw Error("Friend added requires both name and email set");
-
-        state.list = [...state.list, {name, email}];
+        const handle = action.payload.handle?.trim();
+        if(! (name && handle)) throw Error("Friend added requires both name and email set");
+        state.list = [...state.list, {name, handle}];
         saveFriendList(state);
     },
     removeFriend: (state, action) => { 
         const target = action.payload.toLowerCase();
-        state.list = state.list.filter((x: FriendData)  => x.email != target); 
+        state.list = state.list.filter((x: FriendData)  => x.handle != target); 
         saveFriendList(state);
     }
   }

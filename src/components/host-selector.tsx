@@ -46,7 +46,7 @@ export default function HostSelector({onJoin}: Props) {
         <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
             {value
-            ? friends.find((f: FriendData) => f.email === value)?.name
+            ? value //friends.find((f: FriendData) => f.handle === value)?.handle
             : "Play Against..."}
             <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -58,9 +58,9 @@ export default function HostSelector({onJoin}: Props) {
             <CommandEmpty>No friends found. Add some to your friend list.</CommandEmpty>
             <CommandGroup>
                 {friends.map((f: FriendData) => (
-                <CommandItem key={f.email} value={f.email} onSelect={onHostSelected}>
-                    <CheckIcon className={cn("mr-2 h-4 w-4", value === f.email ? "opacity-100" : "opacity-0")} />
-                    {f.name}
+                <CommandItem key={f.handle} value={f.handle} onSelect={onHostSelected}>
+                    <CheckIcon className={cn("mr-2 h-4 w-4", value === f.handle ? "opacity-100" : "opacity-0")} />
+                    {f.handle} {f.name && `(${f.name})`}
                 </CommandItem>
                 ))}
             </CommandGroup>

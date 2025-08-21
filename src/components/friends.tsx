@@ -15,25 +15,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { validHandle } from "@/lib/utils";
 
 function FriendAdder(){
     const friends = useSelector((state: RootState) => state.friends.list);
     const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
+    const [handle, setHandle] = useState("");
     const dispatch = useDispatch();
 
     function handleAdd(){
-        console.log("ADD FRIEND", name, email);
-        if(friends.find((f: FriendData) => f.email == email) != null){
+        console.log("ADD FRIEND", name, handle);
+        if(! validHandle(handle)){                              // todo: notify
+            return;     
+        }
+        if(friends.find((f: FriendData) => f.handle == handle) != null){
             // TODO: make existing row flash
             return; 
-        }    
-        dispatch(addFriend({name, email}));
+        }
+        dispatch(addFriend({name, handle}));
+        setName("");
+        setHandle("");
     }
     return (
     <div className="flex max-w-100">
         <Input className="mr-2" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input className="mr-2" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input className="mr-2" placeholder="Email" value={handle} onChange={(e) => setHandle(e.target.value)} />
         <Button onClick={handleAdd}>Add</Button>
     </div>
     );
@@ -42,8 +48,8 @@ function FriendAdder(){
 export default function Friends(){
     const friends = useSelector((state: RootState) => state.friends.list);
     const dispatch = useDispatch();
-    function removeHandler(email: string){
-        dispatch(removeFriend(email));
+    function removeHandler(handle: string){
+        dispatch(removeFriend(handle));
     }
     return (
     <>
@@ -52,18 +58,18 @@ export default function Friends(){
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Alias</TableHead>
+                    <TableHead>Handle</TableHead>
                     <TableHead className="text-right"></TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {friends.map((f: FriendData) => ( 
-                    <TableRow key={f.email}>
+                    <TableRow key={f.handle}>
                         <TableCell>{f.name}</TableCell>
-                        <TableCell>{f.email}</TableCell>
+                        <TableCell>{f.handle}</TableCell>
                         <TableCell>
-                            <Button onClick={removeHandler.bind(null, f.email)}>Remove</Button>
+                            <Button onClick={removeHandler.bind(null, f.handle)}>Remove</Button>
                         </TableCell>
                     </TableRow>
                 ))}

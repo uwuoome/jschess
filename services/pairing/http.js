@@ -1,5 +1,5 @@
 import url from 'url';
-import {createPlayer, getPlayerByName} from './database.mjs'
+import {createPlayer, getPlayerByName, getPlayerByHash} from './database.mjs'
 
 function defaultMsg(code){
     return {
@@ -34,14 +34,24 @@ export function info(req, res){
 }
 
 export function join(req, res){
-    console.log('Received data:', req.body);
+    console.log('Join Received data:', req.body);
     const handle = (req.body.handle || "").trim();
     console.log("handle", handle);
     if(handle == "") return httperr(res, 200, "no handle");
+    if(! /^[a-zA-Z0-9_]{3,16}$/.test(handle)) return httperr(res, 200, "invalid handle");
     if(! handleAvailable(handle)) return httperr(res, 200, "in use");
     const hash = createPlayer(handle, req.ip);
     if(hash == null) return httperr(res, 500, "database error");
     return httpok(res, {handle, token: hash});
+}
+
+export function restore(req, res){
+    const token = req.body.token;
+    if(! /^\$2[a-y]?\$[0-9]{2}\$[A-Za-z0-9./]{53}$/.test(token)) return httperr(res, 200, "bad token");
+    const player = getPlayerByHash(token);
+    if(! player) return httperr(res, 200, "player not found"); 
+    console.log(player.name, "restoring account");
+    return httpok(res, {handle: player.name, token});
 }
 
 const  handleAvailable = (handle) => !getPlayerByName(handle);

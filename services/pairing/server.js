@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import http from 'http';
-import {join, check, info} from './http.js';
+import {join, restore, check, info} from './http.js';
 import express from 'express';
 import cors from 'cors';
 import socketHandler from './socket.js';
@@ -20,6 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 
 app.post('/adduser', join);
+app.post('/restoreuser', restore);
 app.get('/check', check)
 app.get('/', info);
 

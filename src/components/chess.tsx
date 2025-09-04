@@ -26,7 +26,7 @@ export const AiWorker = new Worker(new URL("@/workers/ai-worker.ts", import.meta
 });
 console.log("AI worker init");
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 export function piece(code: string){
     const upper = code.toUpperCase();

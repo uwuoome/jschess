@@ -17,6 +17,10 @@ export default function AboutPage(){
                 The client is based on React, Redux and Shadcn. It can be installed as a PWA (app). 
                 Offline first capability means the application can be used without a network connection.
             </p>
+            <p> 
+                The server uses Express to handle HTTP requests and Socket.IO for pairing via web sockets.
+                User's handles along with their ELO are store in a basic SQLite database.
+            </p> 
             <h2>Basic Chess Engine</h2>
             <p>
                 By design there would be three game modes: Hotseat, Network and vs AI. 
@@ -107,8 +111,8 @@ export default function AboutPage(){
             <h2>Network Play</h2>
             <p>
                 Network games work slightly different from the other modes because an opponent needs to be found first.
-                A generic connection page allows a player to set themselves a handle and search for a game, and a friends list
-                allows them to select an opponent to search for specifically.
+                Before playing a player needs to define a user handle, which the server checks for uniqueness then returns an ID token.
+                A player can search for a game against a specific friend or any opponent that the pairing server finds.
             </p>
             <code className="pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 text-white">
                 components/p2p-game.ts 

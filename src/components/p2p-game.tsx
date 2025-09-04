@@ -141,13 +141,14 @@ export default function P2PGame({game}: P2PGameProps) {
   function setPlayer(){
     if(isUpdating) return;
     const id = myIdRef?.current?.value.trim();
-    if(! id) return alert("No ID or Token provided.");
-    if(validToken(id)){
+    if(! id){
+      return setAlertMessage({title: "No ID or Token provided.", success: false,  message: ""});
+    }else if(validToken(id)){
       return restoreID(id);
-    }
-    if(! validHandle(id)){
-      return alert(`User handle must be between 3 and 16 characters long, composed of alphanumeric characters or underscores. \n\r
-          Or an existing 60 character token must be supplied.`);
+    }else if(! validHandle(id)){
+      const message = `User handle must be between 3 and 16 characters long, composed of alphanumeric characters or underscores. \n\r
+          Or an existing 60 character token must be supplied.`;
+      return setAlertMessage({title: "Invalid Handle or Token", success: false, message});
     }
     updateID(id);
   }

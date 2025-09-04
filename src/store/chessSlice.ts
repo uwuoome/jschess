@@ -13,7 +13,7 @@ export type GameState = {
     myPlayer: 0 | 1;                      // player ID  (not used in hotseat games)   
     activePlayer: 0 | 1 | -1;             // active player index, or -1 to lock out both players
     turnNumber: number;                   // chess turn number
-    inCheck: 0 | 1 | 2 | 3;               // no | yes | checkmate | stalemate
+    //inCheck: 0 | 1 | 2 | 3;               // no | yes | checkmate | stalemate
     board: string[];                      // 64 element char array describing board state
     selected: null | ChessMove;           // selection made
     target: null | number;                // target tile to move to after selection 
@@ -48,7 +48,7 @@ const initialBoard = [
   " ", "Q", " ", " ", " ", " ", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
   " ", " ", " ", " ", " ", "p", " ", " ",
-  "P", "P", " ", "P", "P", " ", "P", "P",
+  "P", "P", "p", "P", "P", " ", "P", "P",
   " ", " ", " ", " ", "K", " ", " ", "R",
 ];
 */
@@ -67,7 +67,7 @@ const initialState: GameState = {
     myPlayer: 0,
     activePlayer: 0,
     turnNumber: 1,
-    inCheck: 0,
+    //inCheck: 0,
     board: initialBoard,
     selected: null,
     target: null,
@@ -135,9 +135,8 @@ function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
   if(piece.toUpperCase() != "P") return piece;
   const homeRow = getHomeRow(player == 1);
   const row = Math.floor(moveTo / 8);
-  const moveRow = (mode == "hotseat" &&  player == 1)? 7-row : row;
-  if(homeRow == 7 && moveRow == 0) return player == 0? "Q": "q";
-  if(homeRow == 0 && moveRow == 7) return player == 0? "Q": "q";
+  if(homeRow == 7 && row == 0) return player == 0? "Q": "q";
+  if(homeRow == 0 && row == 7) return player == 0? "Q": "q";
   return piece;
 }
 

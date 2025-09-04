@@ -243,6 +243,25 @@ export function algebraicMove(from: number, to: number){
     return algebraicNotation(from)+algebraicNotation(to);
 }
 
+
+function fromAlgebraic(rank: string, file: string){
+    const rl: Record<'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h', number> = {
+        'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7
+    };
+    const rowNum = 7 - (parseInt(rank) - 1);
+    const colNum  = rl[file  as keyof typeof rl];
+    return rowNum * 8 + colNum;
+}
+
+/**
+ * @param algebraic 2 character string containing file and rank to convert to an index eg: e1 or b5
+ * @return index
+ */
+export function parseAlgebraic(algebraic: string){
+    if(algebraic.length != 2) return null;
+    return fromAlgebraic(algebraic[1], algebraic[0]);
+}
+
 /**
  * @param algebraic notation string to convert to move in UCI format eg: e1d2 or b1a1q
  * @return [fromIndex, toIndex, extraInfo] 3 element array. From and to indicies are 0 to 63 derived from the 
@@ -250,16 +269,8 @@ export function algebraicMove(from: number, to: number){
  */
 export function parseMove(algebraic: string){
     if(algebraic.length < 4) return null;
-    function convert(rank: string, file: string){
-        const rl: Record<'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h', number> = {
-            'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7
-        };
-        const rowNum = 7 - (parseInt(rank) - 1);
-        const colNum  = rl[file  as keyof typeof rl];
-        return rowNum * 8 + colNum;
-    }
-    const from = convert(algebraic[1], algebraic[0]);
-    const to =  convert(algebraic[3], algebraic[2]); 
+    const from = fromAlgebraic(algebraic[1], algebraic[0]);
+    const to =  fromAlgebraic(algebraic[3], algebraic[2]); 
     const extra = algebraic.substring(4);
     //console.log(algebraic, "parsed as from", from, "to", to);
     return [from, to, extra];
@@ -330,7 +341,7 @@ function allPiecesThatCanTake(irBlack: boolean, board: string[], flipped: boolea
  * @param irBlack whether of not the player to test for check is black; false is white.
  * @param board 64 element array containing board tile state.
  * @param flipped true if the board is flipped upside down (from black player's perspective).
- * @param moves optional parameter, defines if moves are available to determine stalemate. If undefined (null) will work to determine.
+ * @param movesAvailable optional parameter, defines if moves are available to determine stalemate. If undefined (null) will work to determine.
  * @return 0 not in check, 1 check, 2 checkmate, 3 stalemate.
  */
 export function getCheckState(irBlack: boolean, board: string[], flipped: boolean, movesAvailable: boolean | null = null) {
@@ -390,7 +401,6 @@ function playerHasAnyMovesAvailable(isBlack: boolean, board: string[]): boolean{
     }, [] as number[]);
     
     for(let i=0; i<pieceIndices.length; i++){
-        console.log(pieceIndices[i], validIndices(pieceIndices[i], board, false, 0).length);
         if(validIndices(pieceIndices[i], board, false, 0).length > 0) return true;
     }
     return false;

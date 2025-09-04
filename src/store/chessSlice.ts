@@ -131,7 +131,7 @@ function castling(state: GameState, target: number){
 // returns the piece passed in, unless it is a pawn that has reached the last row, in which case it becomes a queen
 // TODO: will we need selection? The unit could also become a knight, rook or bishop.
 // TODO: this can be moved into logic, conbvert mode to flipped in that
-function promotion(player: 0 | 1, piece: string, moveTo: number, mode: string){
+function promotion(player: 0 | 1, piece: string, moveTo: number){
   if(piece.toUpperCase() != "P") return piece;
   const homeRow = getHomeRow(player == 1);
   const row = Math.floor(moveTo / 8);
@@ -265,7 +265,7 @@ const chessSlice = createSlice({
             const nextBoard = [...state.board];
             nextBoard[state.selected.from] = " ";
             // TODO: add any piece taken to a removed list, or it could be inferred from the board
-            nextBoard[targetIndex] = promotion(state.activePlayer, state.selected.piece, targetIndex, state.mode);
+            nextBoard[targetIndex] = promotion(state.activePlayer, state.selected.piece, targetIndex);
             state.board = nextBoard;
           }  
           state.target = targetIndex;

@@ -214,3 +214,11 @@ p, h1, h2, h3{
   margin-top: 4px;
   margin-bottom: 8px;
 }
+
+a{
+  color: blue;
+}
+
+.sidebar a{
+  color: black;
+}

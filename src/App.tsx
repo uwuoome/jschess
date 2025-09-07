@@ -17,7 +17,9 @@ function App() {
     <Provider store={store}>
       <Router>
         <SidebarProvider>
-          <AppSidebar />
+          <div className="sidebar">
+            <AppSidebar />
+          </div>
           <main className={`w-1/1 m-0 p-10`}>
             <SidebarTrigger />
             <Routes>

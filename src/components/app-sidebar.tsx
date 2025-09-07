@@ -24,10 +24,11 @@ const items = [{
     title: "Friend List",
     url: "/friends",
     icon: Users,
-  }, {
+ /* }, {
     title: "Rock Paper Scissors",
     url: "/rps",
     icon: Joystick,
+  */
   }, {
     title: "P2P Chess",
     url: "/chess/p2p",

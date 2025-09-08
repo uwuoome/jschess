@@ -1,4 +1,4 @@
-import { Home, Joystick, PencilRuler, Users } from "lucide-react"
+import { Home, /*Joystick,*/ PencilRuler, Users } from "lucide-react"
 import WhiteRook from '@/assets/WR.svg?react';
 import WhiteKnight from '@/assets/WN.svg?react';
 import WhiteBishop from '@/assets/WB.svg?react';

@@ -1,8 +1,8 @@
 import type { WebRTCMessage } from "@/hooks/use-p2p";
-import { algebraicNotation } from "@/lib/chess-logic";
+import { algebraicNotation, parseAlgebraic } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
 import { initGame, endGame, movePiece, nextTurn, opponentMove, selectPiece } from "@/store/chessSlice";
-import React from "react";
+import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MoveHistory from "./chess-history";
@@ -26,7 +26,7 @@ export const AiWorker = new Worker(new URL("@/workers/ai-worker.ts", import.meta
 });
 console.log("AI worker init");
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 export function piece(code: string){
     const upper = code.toUpperCase();
@@ -43,6 +43,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const board = useSelector((state: RootState) => state.chess.board);
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target);
+    const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
+
+    const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
 
 
@@ -71,6 +74,17 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     useEffect(receive, [currentMessage]);
     useEffect(send, [selected, target]);
 
+     // after a move has been made, highlight it temporarily
+    useEffect(() => {      
+        if(! movesMade.length) return;    
+        const lastMove = movesMade[movesMade.length-1];
+        const from = parseAlgebraic(lastMove.substring(0, 2));
+        const to = parseAlgebraic(lastMove.substring(2, 4));
+        setHilites(new Set([from, to]));
+        const timeout = setTimeout(setHilites.bind(null, new Set()), 1200);
+        return () => clearTimeout(timeout); 
+    }, [movesMade.length]);
+
     useEffect(() => {
         dispatch(initGame({mode, player}));
     }, []);
@@ -78,7 +92,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     useEffect(() => {
         // Create an artifical delay between players' turns.
         if(target == null) return () => null;
-        console.log("Setting timeout");
         const timeout = setTimeout( () => dispatch(nextTurn()), 800 );
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
@@ -87,24 +100,25 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         const size = mobile()? "w-11 h-11": "w-16 h-16";
         const prefix = size+" content-center "; 
         const canMoveTo = selected?.options.includes(index);
-        const hilite = "border-blue-200"; // TODO: add themes
         if(canMoveTo){
             const light = "bg-gray-200";
             const dark = "bg-gray-500";
             const bg = isBlack? light: dark; 
-            return `${prefix}${bg} border-8 border-solid ${hilite}`;
+            return `${prefix}${bg} border-8 border-solid border-blue-200`;
         }   
+        const border = hilites.has(index)? " border-8 border-solid border-lime-400": "";
         const light = "bg-white"
         const dark = "bg-gray-400";
-        return prefix+(isBlack? light: dark);
+        return prefix+(isBlack? light: dark)+border;
     }
 
     function pieceDisplay(index: number){
         const scale = mobile()? "w-8 h-8": "w-12 h-12"; 
         const canMoveTo = selected?.options.includes(index);
+        const hilited = hilites.has(index);
         const bg = selected?.from === index ? `bg-blue-200 ml-2` : "";
         if(bg) return `${scale} ${bg}`;
-        const ml = canMoveTo? "ml-0": "ml-2";
+        const ml = (canMoveTo || hilited) ? "ml-0": "ml-2";
         return `${scale} ${ml}`;
     }
 
@@ -180,7 +194,7 @@ function ChessInfo(){
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
-
+    const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     // TODO: sort out leaving and restarting in network mode
 
@@ -189,6 +203,9 @@ function ChessInfo(){
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
                 Turn {turnNumber} {activePlayer? "Black": "White"}
             </span>
+            {movesMade.length > 0 && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
+                Last Move: {movesMade[movesMade.length-1]} 
+            </span>}
             {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
                 {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
             </span>}

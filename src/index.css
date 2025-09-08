@@ -222,3 +222,7 @@ a{
 .sidebar a{
   color: black;
 }
+
+button, button a{
+  color: white; 
+}

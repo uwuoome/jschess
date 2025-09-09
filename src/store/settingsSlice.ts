@@ -4,6 +4,7 @@ export type FriendData = {name: string, handle: string}
 export type SettingsState = {
     myid: string;
     mytoken: string;
+    ailevel: number;
     game: string;
     list: FriendData[];
 };
@@ -11,6 +12,7 @@ const initialState: SettingsState = {
     myid: "",
     mytoken: "",
     game: "chess",
+    ailevel: 1,
     list: [],
 };
 
@@ -18,9 +20,9 @@ export const loadSettings = createAsyncThunk(
     'settings/loadInitialState',
     async () => {
         try {
-            const serialized = localStorage.getItem('friendsList');
+            const serialized = localStorage.getItem('profile');
             if (serialized == null) return initialState;
-            return JSON.parse(serialized);
+            return {...initialState, ...JSON.parse(serialized)};
         } catch (e) {
             console.warn('Could not load state', e);
             return initialState;
@@ -48,6 +50,13 @@ const settingsSlice = createSlice({
         setPreferredGame: (state, action) => {
             state.game = action.payload;
         },
+        setAiDifficulty: (state, action) => {
+            const difficulty = parseInt(action.payload);
+            if(isNaN(difficulty) || difficulty < 0 || difficulty > 9){
+                throw Error(`Invalid AI Difficulty: ${difficulty}`);
+            }
+            state.ailevel = difficulty;
+        },
         addFriend: (state, action) => { 
             const name = action.payload.name?.trim();
             const handle = action.payload.handle?.trim();
@@ -71,5 +80,5 @@ const settingsSlice = createSlice({
     },
 });
 
-export const { setMyID, setPreferredGame, addFriend, removeFriend } = settingsSlice.actions;
+export const { setMyID, setPreferredGame, setAiDifficulty, addFriend, removeFriend } = settingsSlice.actions;
 export default settingsSlice.reducer;

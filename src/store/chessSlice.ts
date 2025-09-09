@@ -19,6 +19,7 @@ export type GameState = {
     target: null | number;                // target tile to move to after selection 
     movesMade: string[];                  // log of moves made in algebraic notation, for replay or history browsing
     message: string;                      // message presented to user
+    aiLevel: 1 | 2 | 3 | 4 | 5 | 6;       // ai skill level in the game
 }
 export type ChessMove = {
     piece: string;
@@ -42,16 +43,17 @@ const initialBoard = [
 ];
 /*
 const initialBoard = [
+  " ", " ", " ", " ", " ", " ", " ", "k",
+  " ", " ", " ", " ", "R", " ", " ", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
-  "k", " ", " ", " ", " ", "Q", " ", " ",
-  " ", " ", "R", " ", " ", "P", " ", " ",
-  " ", "Q", " ", " ", " ", " ", " ", " ",
+  " ", "q", " ", " ", " ", " ", "Q", " ",
   " ", " ", " ", " ", " ", " ", " ", " ",
-  " ", " ", " ", " ", " ", "p", " ", " ",
-  "P", "P", "p", "P", "P", " ", "P", "P",
-  " ", " ", " ", " ", "K", " ", " ", "R",
+  " ", " ", " ", " ", " ", " ", " ", " ",
+  " ", " ", " ", "r", " ", " ", " ", " ",
+  "K", " ", " ", " ", " ", " ", " ", " ",
 ];
 */
+
 
 const initialState: GameState = {
     mode: "hotseat",
@@ -67,12 +69,12 @@ const initialState: GameState = {
     myPlayer: 0,
     activePlayer: 0,
     turnNumber: 1,
-    //inCheck: 0,
     board: initialBoard,
     selected: null,
     target: null,
     movesMade: [],
-    message: ""
+    message: "",
+    aiLevel: 2,                   
 }
 
 
@@ -228,7 +230,8 @@ const chessSlice = createSlice({
   reducers: {
     initGame: (_state, action) => {
       const message = action.payload.movesMade? "Restored game in progress. "+(action.payload.message || "")  :"";
-      const args = (action.payload.player == null)? action.payload: {mode: action.payload.mode, myPlayer: action.payload.player};
+      const props = {mode: action.payload.mode, myPlayer: action.payload.player, aiLevel: action.payload.aiLevel}
+      const args = (action.payload.player == null)? action.payload: props;
       return { ...initialState, ...args, message};
     },
     endGame: (state, action) => {

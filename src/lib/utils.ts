@@ -20,3 +20,14 @@ export function validHandle(handle: string){
 export function validToken(token: string){
   return /^\$2[a-y]?\$[0-9]{2}\$[A-Za-z0-9./]{53}$/.test(token);
 }
+
+export function aiPlayerTitle(skillLevel: number){
+    switch(skillLevel){
+        case 1: return "Novice";
+        case 2: return "Good";
+        case 3: return "Advanced";
+        case 4: return "Challenging";
+        case 5: return "Hardest";
+        default: "Invalid";
+    }
+}

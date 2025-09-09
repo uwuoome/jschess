@@ -1,4 +1,4 @@
-import { algebraicNotation, getCheckState, getPlayerMovesAvailable } from "./chess-logic";
+import { algebraicNotation, getCheckState, getPlayerMovesAvailable} from "./chess-logic";
 
 const EMPTY = " ";
 

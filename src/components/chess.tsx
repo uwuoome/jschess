@@ -9,6 +9,7 @@ import MoveHistory from "./chess-history";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { Spinner } from '@/components/ui/shadcn-io/spinner';
+import { aiPlayerTitle } from "@/lib/utils";
 
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
@@ -44,6 +45,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const selected = useSelector((state: RootState) => state.chess.selected);
     const target = useSelector((state: RootState) => state.chess.target);
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
+    const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
 
     const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
@@ -86,7 +88,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }, [movesMade.length]);
 
     useEffect(() => {
-        dispatch(initGame({mode, player}));
+        dispatch(initGame({mode, player, aiLevel}));
     }, []);
 
     useEffect(() => {
@@ -195,6 +197,8 @@ function ChessInfo(){
     const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
+    const mode  = useSelector((state: RootState) => state.chess.mode);
+    const aiLevel  = useSelector((state: RootState) => state.chess.aiLevel);
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     // TODO: sort out leaving and restarting in network mode
 
@@ -203,6 +207,11 @@ function ChessInfo(){
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
                 Turn {turnNumber} {activePlayer? "Black": "White"}
             </span>
+            {mode == "ai"  &&
+                <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
+                    VS {aiPlayerTitle(aiLevel)} AI
+                </span>
+            }
             {movesMade.length > 0 && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
                 Last Move: {movesMade[movesMade.length-1]} 
             </span>}
@@ -221,6 +230,7 @@ function ChessInfo(){
 
 function ChessActions(props: InitProps){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
+    const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
     const dispatch = useDispatch();
     function leave(){
         if(! confirm("Are you sure you want to concede?")) return;
@@ -228,7 +238,7 @@ function ChessActions(props: InitProps){
     }
     function restart(){
         dispatch(endGame(true));
-        dispatch(initGame(props));
+        dispatch(initGame({...props, aiLevel}));
     }
     function history(){
         alert("TODO: Show move history for mobile");
@@ -239,18 +249,19 @@ function ChessActions(props: InitProps){
                 {mobile() && <Button className="mr-2" onClick={history}>View History</Button>}
                 <Button className="" onClick={leave}>Concede</Button>
             </> || <>
-                <Button className="mr-2"><Link to="/">Home</Link></Button>
+                <Link to="/"><Button className="mr-2">Home</Button></Link>
                 <Button className="" onClick={restart}>New Game</Button>
             </>}
         </div>
     )
 }
 
-export default function Chess(props: ChessProps) { 
+export default function Chess(props: ChessProps) {
+    
     return (
     <div className="flex">
         <div>
-            <ChessBoard {...props} />
+            <ChessBoard {...props}  />
             <ChessInfo />
             <ChessActions mode={props.mode} player={props.player} />
         </div>
@@ -260,4 +271,5 @@ export default function Chess(props: ChessProps) {
     </div>
     );
 };
+
 

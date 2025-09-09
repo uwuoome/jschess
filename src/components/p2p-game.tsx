@@ -79,8 +79,8 @@ function showMessage(title: string | null, success: boolean, message: string){
 export default function P2PGame({game}: P2PGameProps) {
   const Game = game;
   const [seeking, setSeeking] = useState<null | string>(null);
-  const myid = useSelector((state: RootState) => state.friends.myid);
-  const mytoken = useSelector((state: RootState) => state.friends.mytoken);
+  const myid = useSelector((state: RootState) => state.profile.myid);
+  const mytoken = useSelector((state: RootState) => state.profile.mytoken);
 
   const myIdRef = useRef<HTMLInputElement>(null);
   const [isUpdating, setIsUpdating] = useState(false); // New state variable
@@ -178,7 +178,7 @@ export default function P2PGame({game}: P2PGameProps) {
         <Button className="mr-2" disabled={!myid} onClick={() => setSeeking("anyone")}>Play Anyone</Button>
         <span className="m-2">or</span>
         <HostSelector onJoin={(peerID: string) => setSeeking(peerID)} />
-        <Button className="ml-2"><Link to="/friends">Configure Friends</Link></Button>
+        <Link to="/profile"><Button className="ml-2">Configure Friends</Button></Link>
       </div>
     </div>   
   );

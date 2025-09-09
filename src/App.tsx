@@ -1,16 +1,16 @@
 import './App.css'
 
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-import {store} from "@/store/index"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import {AppSidebar} from "@/components/app-sidebar"
-import Home from "@/components/home"
-import Friends from "@/components/friends"
-import P2PGame from "@/components/p2p-game"
+import {store} from "@/store/index";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {AppSidebar} from "@/components/app-sidebar";
+import Home from "@/components/home";
+import P2PGame from "@/components/p2p-game";
 import { Provider } from 'react-redux';
 import RockPaperScissors from './components/rock-paper-scissors';
 import Chess from './components/chess';
 import AboutPage from './components/about-page';
+import ProfilePage from './components/profile-page';
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
             <SidebarTrigger />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/friends" element={<Friends />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/rps" element={<P2PGame game={RockPaperScissors} />} />
               <Route path="/chess/p2p" element={<P2PGame game={Chess} />} />
               <Route path="/chess/hotseat" element={<Chess player={0} mode="hotseat" />} />

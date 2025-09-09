@@ -27,7 +27,7 @@ type Props = {
 export default function HostSelector({onJoin}: Props) {
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState("")
-    const friends = useSelector((state: RootState) => state.friends.list);
+    const friends = useSelector((state: RootState) => state.profile.list);
     function onHostSelected(currentValue: string) {
         const nextValue = currentValue === value ? "" : currentValue;
         setValue(nextValue);

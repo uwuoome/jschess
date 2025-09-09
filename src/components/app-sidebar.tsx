@@ -21,8 +21,8 @@ const items = [{
     url: "/",
     icon: Home,
   }, {
-    title: "Friend List",
-    url: "/friends",
+    title: "Profile & Settings",
+    url: "/profile",
     icon: Users,
  /* }, {
     title: "Rock Paper Scissors",

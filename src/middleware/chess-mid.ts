@@ -23,13 +23,13 @@ const chessStorageMiddleware = (store: any) => (next: any) => (action: any) => {
     if(action.type == 'game/nextTurn'){
         localStorage.setItem(`chess_state_${state.chess.mode}`, JSON.stringify(state.chess));
     }else if(action.type == 'game/endGame'){
+        // TODO: save result of match?
         localStorage.removeItem(`chess_state_${state.chess.mode}`);
     }
     return result;
 }   
 
 const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
-    const searchDepth = 4;
     if(action.type == 'game/endGame'){
         AiWorker.postMessage({ stop: true });
         return next(action);
@@ -39,7 +39,9 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
 
     const aiStarts = action.type == 'game/initGame' &&  state.chess.activePlayer == 1;
     if(action.type == 'game/nextTurn' || aiStarts){
+        
         if(state.chess.mode == "ai" && state.chess.activePlayer == 1){
+            const searchDepth = store.getState().chess.aiLevel || 2; 
             const start = Date.now();
             AiWorker.onmessage = (e) => {
                 const aiMove = e.data.move;

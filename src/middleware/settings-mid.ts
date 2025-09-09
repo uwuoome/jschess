@@ -1,10 +1,10 @@
 
-import { setMyID, setPreferredGame, addFriend, removeFriend, type SettingsState } from "@/store/settingsSlice";
+import { setMyID, setPreferredGame, setAiDifficulty, addFriend, removeFriend, type SettingsState } from "@/store/settingsSlice";
 
-function saveFriendList(state: SettingsState) {
+function saveProfile(state: SettingsState) {
     try {
         const serialized = JSON.stringify(state);
-        localStorage.setItem( 'friendsList', serialized);
+        localStorage.setItem('profile', serialized);
     } catch (e) {
         console.warn('Could not save state', e);
     }
@@ -13,9 +13,9 @@ function saveFriendList(state: SettingsState) {
 const settingsMiddleware = (store: any) => (next: any) => (action: any) => {
     const result = next(action);
     const state = store.getState();    
-    const onSaveActions = [setMyID.type, setPreferredGame.type, addFriend.type, removeFriend.type];
+    const onSaveActions = [setMyID.type, setPreferredGame.type, setAiDifficulty.type, addFriend.type, removeFriend.type];
     if(onSaveActions.includes(action.type)){ 
-        saveFriendList(state.friends);
+        saveProfile(state.profile);
     }
     return result;
 }

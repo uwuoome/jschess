@@ -9,7 +9,7 @@ import { chessAIMiddleware, chessStorageMiddleware } from '@/middleware/chess-mi
 
 export const store = configureStore({
   reducer: {
-    friends: friendsReducer,
+    profile: friendsReducer,
     chess: chessReducer,
   },
   middleware: getDefaultMiddleware => getDefaultMiddleware().concat(

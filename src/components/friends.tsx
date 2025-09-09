@@ -18,7 +18,7 @@ import {
 import { validHandle } from "@/lib/utils";
 
 function FriendAdder(){
-    const friends = useSelector((state: RootState) => state.friends.list);
+    const friends = useSelector((state: RootState) => state.profile.list);
     const [name, setName] = useState("");
     const [handle, setHandle] = useState("");
     const dispatch = useDispatch();
@@ -26,7 +26,7 @@ function FriendAdder(){
     function handleAdd(){
         console.log("ADD FRIEND", name, handle);
         if(! validHandle(handle)){                              // todo: notify
-            return;     
+            return alert("invalid handle");    
         }
         if(friends.find((f: FriendData) => f.handle == handle) != null){
             // TODO: make existing row flash
@@ -39,21 +39,21 @@ function FriendAdder(){
     return (
     <div className="flex max-w-100">
         <Input className="mr-2" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input className="mr-2" placeholder="Email" value={handle} onChange={(e) => setHandle(e.target.value)} />
+        <Input className="mr-2" placeholder="Handle" value={handle} onChange={(e) => setHandle(e.target.value)} />
         <Button onClick={handleAdd}>Add</Button>
     </div>
     );
 }
 
 export default function Friends(){
-    const friends = useSelector((state: RootState) => state.friends.list);
+    const friends = useSelector((state: RootState) => state.profile.list);
     const dispatch = useDispatch();
     function removeHandler(handle: string){
         dispatch(removeFriend(handle));
     }
     return (
     <>
-        <h1>Friend List</h1>
+        <h3>Friend List</h3>
         {friends.length && 
         <Table>
             <TableHeader>

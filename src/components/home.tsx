@@ -33,15 +33,21 @@ export default function Home(){
             </div>
             <div className="flex border-1 rounded-md p-2 relative content-center max-w-[400px] bg-gradient-to-r from-lime-400 from-10%  to-emerald-500 to-90%">
                 <div className="absolute top-1 left-4 font-bold">Play: </div>
-                <Button className="m-1 mt-6 grow">
-                    <Link to="/chess/ai">AI</Link>
-                </Button>
-                <Button className="m-1 mt-6 grow">
-                    <Link to="/chess/hotseat">Hotseat</Link>
-                </Button>
-                <Button className="m-1 mt-6 grow">
-                     <Link to="/chess/p2p">Network</Link>
-                </Button>
+                <Link to="/chess/ai">
+                    <Button className="m-1 mt-6 grow">
+                        AI
+                    </Button>
+                </Link>
+                <Link to="/chess/hotseat">
+                    <Button className="m-1 mt-6 grow">
+                        Hotseat
+                    </Button>
+                </Link>
+                <Link to="/chess/p2p">
+                    <Button className="m-1 mt-6 grow">
+                        Network
+                    </Button>
+                </Link>
             </div>
 
 

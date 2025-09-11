@@ -20,6 +20,7 @@ export type GameState = {
     movesMade: string[];                  // log of moves made in algebraic notation, for replay or history browsing
     message: string;                      // message presented to user
     aiLevel: 1 | 2 | 3 | 4 | 5 | 6;       // ai skill level in the game
+    lastMoveHilite: boolean;              // if set higlights move
 }
 export type ChessMove = {
     piece: string;
@@ -74,7 +75,8 @@ const initialState: GameState = {
     target: null,
     movesMade: [],
     message: "",
-    aiLevel: 2,                   
+    aiLevel: 2,
+    lastMoveHilite: false,                   
 }
 
 
@@ -280,8 +282,11 @@ const chessSlice = createSlice({
     },
     nextTurn: endTurn,
     opponentMove: handleOpponentMove,
+    highlightLastMove: (state, action) => {
+      state.lastMoveHilite = (!!action.payload);
+    },
   }
 });
 
-export const { initGame, endGame, selectPiece, movePiece, nextTurn, opponentMove} = chessSlice.actions;
+export const { initGame, endGame, selectPiece, movePiece, nextTurn, opponentMove, highlightLastMove} = chessSlice.actions;
 export default chessSlice.reducer;

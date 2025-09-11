@@ -1,7 +1,7 @@
 import type { WebRTCMessage } from "@/hooks/use-p2p";
 import { algebraicNotation, parseAlgebraic } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
-import { initGame, endGame, movePiece, nextTurn, opponentMove, selectPiece } from "@/store/chessSlice";
+import { initGame, endGame, movePiece, nextTurn, opponentMove, selectPiece, highlightLastMove } from "@/store/chessSlice";
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -46,6 +46,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const target = useSelector((state: RootState) => state.chess.target);
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
+    const lastMoveHilite = useSelector((state: RootState) => state.chess.lastMoveHilite); 
 
     const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
@@ -87,6 +88,17 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         return () => clearTimeout(timeout); 
     }, [movesMade.length]);
 
+    useEffect(() => {      
+        if(movesMade.length === 0 || lastMoveHilite === false){
+            setHilites(new Set([])); 
+        }else{   
+            const lastMove = movesMade[movesMade.length-1];
+            const from = parseAlgebraic(lastMove.substring(0, 2));
+            const to = parseAlgebraic(lastMove.substring(2, 4));
+            setHilites(new Set([from, to]));
+        }
+    }, [lastMoveHilite]);
+
     useEffect(() => {
         dispatch(initGame({mode, player, aiLevel}));
     }, []);
@@ -115,7 +127,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
             }
             return `${prefix}${bg} border-8 border-solid border-transparent hover:border-white`;
         }   
-        const border = hilites.has(index)? " border-8 border-solid border-lime-400": "";
+        const border = hilites.has(index) ? " border-8 border-solid border-lime-400": "";
         const isSelectedBlack = board[index].toUpperCase() != board[index];
         if(index === selected?.from){
             if(! isSelectedBlack){
@@ -214,9 +226,16 @@ function ChessInfo(){
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const mode  = useSelector((state: RootState) => state.chess.mode);
     const aiLevel  = useSelector((state: RootState) => state.chess.aiLevel);
+    const dispatch = useDispatch();
+
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     // TODO: sort out leaving and restarting in network mode
-
+    function showLM(){
+     dispatch(highlightLastMove(true));
+    }
+    function hideLM(){
+       dispatch(highlightLastMove(false));
+    }
     return (
         <div className="mt-2 p-2 border-solid border-0 border-gray-500 w-136 max-w-screen font-bold select-none">
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
@@ -227,9 +246,12 @@ function ChessInfo(){
                     VS {aiPlayerTitle(aiLevel)} AI
                 </span>
             }
-            {movesMade.length > 0 && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
-                Last Move: {movesMade[movesMade.length-1]} 
-            </span>}
+            {movesMade.length > 0 && 
+                <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm hover:bg-lime-400" 
+                        onMouseOver={showLM} onMouseOut={hideLM}>
+                    Last Move: {movesMade[movesMade.length-1]} 
+                </span>
+            }
             {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
                 {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
             </span>}

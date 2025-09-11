@@ -92,7 +92,7 @@ export default function MoveHistory() {
     const board = reconstructBoard(history, selected+1);
     return (
         <>
-            <ScrollArea className={`w-40 ml-2 mr-0 border-black border-2 select-none max-h-150 font-mono ${rightBorder()}`}>
+            <ScrollArea className={`w-40 ml-2 mr-0 border-gray-200 border-2 select-none max-h-150 font-mono ${rightBorder()}`}>
                 <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Turn</div>
                 <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Move</div>
                 {history.map((mm, i) => (
@@ -132,12 +132,12 @@ function HistoricBoard(props: HistoricBoardProps){
             const bg = isBlack? light: dark; 
             return `${bg} border-8 border-solid ${hilite}`;
         }   
-        const light = "bg-white pl-2"
+        const light = "bg-gray-300 pl-2"
         const dark = "bg-gray-400 pl-2";
         return isBlack? light: dark;
     }
     return (
-    <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] border-2 border-black w-fit select-none bg-gray-200">
+    <div className="grid grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] w-fit select-none bg-gray-200">
         <div />
         {files.map((file, i) => (
         <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
@@ -192,7 +192,7 @@ function HistoricInfo(props: HistoricInfoProps){
         console.log(board);
     }
     return (
-        <div className="mt-2 p-2 border-solid border-2 border-gray-500 w-136 font-bold select-none">
+        <div className="p-2 border-b-2 border-r-2 border-gray-200 w-135.5 h-14 font-bold select-none">
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
                 Previous Board State
             </span>

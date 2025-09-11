@@ -41,7 +41,7 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
     if(action.type == 'game/nextTurn' || aiStarts){
         
         if(state.chess.mode == "ai" && state.chess.activePlayer == 1){
-            const searchDepth = store.getState().chess.aiLevel || 2; 
+            const searchDepth = (store.getState().chess.aiLevel || 2) + 1; 
             const start = Date.now();
             AiWorker.onmessage = (e) => {
                 const aiMove = e.data.move;

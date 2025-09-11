@@ -102,15 +102,27 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         const size = mobile()? "w-11 h-11": "w-16 h-16";
         const prefix = size+" content-center "; 
         const canMoveTo = selected?.options.includes(index);
+        const hlight = "bg-lime-300" //"bg-gray-200";
+        const hdark = "bg-lime-400" //"bg-gray-500";
+        const light = "bg-gray-300";
+        const dark = "bg-gray-400";
+        
         if(canMoveTo){
-            const light = "bg-gray-200";
-            const dark = "bg-gray-500";
-            const bg = isBlack? light: dark; 
-            return `${prefix}${bg} border-8 border-solid border-blue-200`;
+            const bg = isBlack? hlight: hdark; 
+            const isSelectedBlack = board[selected.from].toUpperCase() != board[selected.from];
+            if(isSelectedBlack){
+                return `${prefix}${bg} border-8 border-solid border-transparent hover:border-black`;
+            }
+            return `${prefix}${bg} border-8 border-solid border-transparent hover:border-white`;
         }   
         const border = hilites.has(index)? " border-8 border-solid border-lime-400": "";
-        const light = "bg-white"
-        const dark = "bg-gray-400";
+        const isSelectedBlack = board[index].toUpperCase() != board[index];
+        if(index === selected?.from){
+            if(! isSelectedBlack){
+                return prefix+` bg-radial from-lime-600 from-20% ${isBlack? hlight: hdark}`;
+            }
+            return prefix+` bg-radial from-lime-100 from-20% ${isBlack? hlight: hdark}`;
+        }
         return prefix+(isBlack? light: dark)+border;
     }
 
@@ -118,7 +130,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         const scale = mobile()? "w-8 h-8": "w-12 h-12"; 
         const canMoveTo = selected?.options.includes(index);
         const hilited = hilites.has(index);
-        const bg = selected?.from === index ? `bg-blue-200 ml-2` : "";
+        const bg = ""; //selected?.from === index ? `bg-blue-200 ml-2` : "";
         if(bg) return `${scale} ${bg}`;
         const ml = (canMoveTo || hilited) ? "ml-0": "ml-2";
         return `${scale} ${ml}`;
@@ -158,17 +170,20 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
             return (
                 <div style={{ position: "relative" }} key={index}>
-
                     {DEBUG && (
                     <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
                         {index}
                     </div>
                     ) || ""}
                     <div className={`${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
-                    {board[index] !== " " && (
-                        <img src={`/chess/${piece(board[index])}`} className={pieceDisplay(index)}
-                        />
-                    )}
+                    {board[index] !== " " &&
+                        <img src={`/chess/${piece(board[index])}`} className={pieceDisplay(index)} />
+                    }
+                    {/*board[index] !== " " && selected?.from === index && 
+                        <img src={`/chess/_${piece(board[index])}`} className={pieceDisplay(index)} style={{
+                            position: "absolute", top: "8px", left: 0   
+                        }} />
+                    */}
                     </div>
                 </div>
             );

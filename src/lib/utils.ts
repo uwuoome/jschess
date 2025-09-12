@@ -24,10 +24,8 @@ export function validToken(token: string){
 export function aiPlayerTitle(skillLevel: number){
     switch(skillLevel){
         case 1: return "Novice";
-        case 2: return "Good";
-        case 3: return "Advanced";
-        case 4: return "Challenging";
-        case 5: return "Hardest";
+        case 2: return "Advanced";
+        case 3: return "Hardest";
         default: "Invalid";
     }
 }

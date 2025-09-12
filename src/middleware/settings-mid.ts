@@ -1,5 +1,13 @@
 
-import { setMyID, setPreferredGame, setAiDifficulty, addFriend, removeFriend, type SettingsState } from "@/store/settingsSlice";
+import { 
+    setMyID, 
+    setPreferredGame, 
+    setAiDifficulty, 
+    addFriend, 
+    removeFriend, 
+    setPieceStyle, 
+    type SettingsState 
+} from "@/store/settingsSlice";
 
 function saveProfile(state: SettingsState) {
     try {
@@ -13,7 +21,13 @@ function saveProfile(state: SettingsState) {
 const settingsMiddleware = (store: any) => (next: any) => (action: any) => {
     const result = next(action);
     const state = store.getState();    
-    const onSaveActions = [setMyID.type, setPreferredGame.type, setAiDifficulty.type, addFriend.type, removeFriend.type];
+    const onSaveActions = [
+        setMyID.type, 
+        setPreferredGame.type, 
+        setAiDifficulty.type, 
+        addFriend.type, 
+        removeFriend.type, 
+        setPieceStyle.type];
     if(onSaveActions.includes(action.type)){ 
         saveProfile(state.profile);
     }

@@ -47,7 +47,8 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
     const lastMoveHilite = useSelector((state: RootState) => state.chess.lastMoveHilite); 
-
+    const pieceStyle = useSelector((state: RootState) => state?.profile?.pieceStyle);
+    
     const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
 
@@ -138,14 +139,14 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         return prefix+(isBlack? light: dark)+border;
     }
 
+
+    function pieceHasOffset(index: number){
+        return (selected?.options.includes(index) || hilites.has(index));
+    }
     function pieceDisplay(index: number){
-        const scale = mobile()? "w-8 h-8": "w-12 h-12"; 
-        const canMoveTo = selected?.options.includes(index);
-        const hilited = hilites.has(index);
-        const bg = ""; //selected?.from === index ? `bg-blue-200 ml-2` : "";
-        if(bg) return `${scale} ${bg}`;
-        const ml = (canMoveTo || hilited) ? "ml-0": "ml-2";
-        return `${scale} ${ml}`;
+        const scale = () => mobile()? "w-8 h-8": "w-12 h-12";
+        const offset = (index: number) =>  pieceHasOffset(index)? "ml-0": "ml-2";
+        return `${scale()} ${offset(index)}`;
     }
 
     const isFlipped = (mode == "hotseat" && activePlayer == 1) || (mode == "network" && myPlayerNumber == 1);
@@ -187,15 +188,16 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
                         {index}
                     </div>
                     ) || ""}
+                    
                     <div className={`${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
                     {board[index] !== " " &&
                         <img src={`/chess/${piece(board[index])}`} className={pieceDisplay(index)} />
                     }
-                    {/*board[index] !== " " && selected?.from === index && 
+                    {pieceStyle == "duo" && board[index] !== " " && 
                         <img src={`/chess/_${piece(board[index])}`} className={pieceDisplay(index)} style={{
-                            position: "absolute", top: "8px", left: 0   
+                            position: "absolute", top: "8px", left: pieceHasOffset(index)? "8px": 0 
                         }} />
-                    */}
+                    }
                     </div>
                 </div>
             );
@@ -249,7 +251,7 @@ function ChessInfo(){
             {movesMade.length > 0 && 
                 <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm hover:bg-lime-400" 
                         onMouseOver={showLM} onMouseOut={hideLM}>
-                    Last Move: {movesMade[movesMade.length-1]} 
+                    Prev: {movesMade[movesMade.length-1]} 
                 </span>
             }
             {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">

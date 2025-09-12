@@ -1,7 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
 import Friends from "./friends";
 import { store, type RootState } from "@/store";
-import { useState } from "react";
+
+/*import { useState } from "react";
 import { CheckIcon } from "lucide-react"
  
 import { aiPlayerTitle, cn } from "@/lib/utils"
@@ -17,30 +18,33 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+ */
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-import { setAiDifficulty, setPieceStyle } from "@/store/settingsSlice";
+ 
+import { setPieceStyle } from "@/store/settingsSlice";
 import TextClickSelector from "./text-click-selector";
+import AISelector from "./ai-selector";
+import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
+import { Play } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function ProfilePage(){
     const myprofile = useSelector((state: RootState) => state.profile);
     const name = myprofile.myid || "Anonymous";
     const dispatch = useDispatch();
     // TODO: Elo, History
-    const [open, setOpen] = useState(false)
-    const onAiChanged = (currentValue: string) => {
-        dispatch( setAiDifficulty(parseInt(currentValue)) );
-        setOpen(false);
-    }
     function changePieceStyle(type: string){
         dispatch( setPieceStyle(type) );
     }
+    const groupContainer = cn("p-2 mt-2 border-1 border-r-4", screen.width > 800? "mr-4": "");
     return (
     <>
         <h1>{name}</h1>
-        <div className="p-2 mt-2 mr-4 border-1 border-r-4">
+        <div className={groupContainer}>
             <h2>Preferences</h2>
             <span>Piece Style: </span>
             <ToggleGroup type="single" size="sm" variant="outline" value={store.getState().profile.pieceStyle} className="ml-2 inline" 
@@ -53,33 +57,14 @@ function ProfilePage(){
                 </ToggleGroupItem>
             </ToggleGroup>
         </div>
-        <div className="p-2 mt-2 mr-4 border-1 border-r-4">
+        <div className={groupContainer}>
+            <Link to="/chess/ai"><Button className="float-right"><Play /></Button></Link>
             <h2>AI Play</h2>
-            <p>AI Difficulty Level: &nbsp; 
-            <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
-                    {aiPlayerTitle(myprofile.ailevel)}
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                <Command>
-                    <CommandList>
-                    <CommandGroup>
-                        {[1, 2, 3].map((level: number) => (
-                        <CommandItem key={level} value={level+""} onSelect={onAiChanged}>
-                            <CheckIcon className={cn("mr-2 h-4 w-4", myprofile.ailevel === level ? "opacity-100" : "opacity-0")} />
-                            {aiPlayerTitle(level)}
-                        </CommandItem>
-                        ))}
-                    </CommandGroup>
-                    </CommandList>
-                </Command>
-                </PopoverContent>
-            </Popover>
+            <p>AI Difficulty Level: &nbsp; <AISelector />
             </p>
         </div>
-        <div className="p-2 mt-2 mr-4 border-1 border-r-4">
+        <div className={groupContainer}>
+            <Link to="/chess/p2p"><Button className="float-right"><Play /></Button></Link>
             <h2>Network Play</h2>
             {/*<code className="border-1 p-1 font-console bg-gray-200 text-black">{myprofile.mytoken}</code>*/}
             {myprofile.mytoken? <>

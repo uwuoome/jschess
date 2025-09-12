@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { Spinner } from '@/components/ui/shadcn-io/spinner';
 import { Progress } from "@/components/ui/progress"
 import { aiPlayerTitle } from "@/lib/utils";
+import AISelector from "./ai-selector";
+import { Home, Users } from "lucide-react";
 
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
@@ -222,8 +224,6 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 function ChessInfo(){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const turnNumber = useSelector((state: RootState) => state.chess.turnNumber);
-    const selected = useSelector((state: RootState) => state.chess.selected);
-    const target = useSelector((state: RootState) => state.chess.target); 
     const message = useSelector((state: RootState) => state.chess.message);
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const mode  = useSelector((state: RootState) => state.chess.mode);
@@ -240,38 +240,39 @@ function ChessInfo(){
        dispatch(highlightLastMove(false));
     }
     return (
-        <div className="mt-2 p-2 border-solid border-0 border-gray-500 w-136 max-w-screen font-bold select-none">
-            <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
-                Turn {turnNumber} {activePlayer? "Black": "White"}
+        <div className="mt-2 p-2 border-solid border-0 border-gray-500 w-136 max-w-screen font-bold select-none whitespace-nowrap">
+            <span className={`m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap ${turnClass}`}>
+                <span className="font-normal">Turn</span> {turnNumber} {activePlayer? "Black": "White"}
             </span>
             {mode == "ai"  &&
-                <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
-                    VS {aiPlayerTitle(aiLevel)} AI
+                <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap">
+                    <span className="font-normal">VS</span> {aiPlayerTitle(aiLevel)} <span className="font-normal">AI</span>
                 </span>
             }
             {movesMade.length > 0 && 
-                <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm hover:bg-lime-400" 
+                <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm hover:bg-lime-400 whitespace-nowrap" 
                         onMouseOver={showLM} onMouseOut={hideLM}>
-                    Prev: {movesMade[movesMade.length-1]} 
+                    <span className="font-normal">Prev: </span>{movesMade[movesMade.length-1]} 
                 </span>
             }
-            {selected && <span className="m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm">
-                {algebraicNotation(selected.from)} <span>: {target && algebraicNotation(target)}</span>
-            </span>}
-            {message  && <div className="m-1 pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
+            {message  && 
+                <div className="m-1 pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
                 {message}
-                
                 {message.indexOf("AI is searching") != -1 && <>
                     <Spinner key='infinite' variant='infinite' className="float-right" />
+                    <div className="bg-gray-50 mb-1 border-1 border-r-2"> 
+                        {message.indexOf("AI is searching") != -1 && <Progress value={aiProgress} />} 
+                    </div>   
                 </>}
-            </div>}
-            {message.indexOf("AI is searching") != -1 && <Progress value={aiProgress} />}   
+                </div>
+            }
         </div>
     );
 }
 
 function ChessActions(props: InitProps){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
+    const mode = useSelector((state: RootState) => state.chess.mode);
     const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
     const dispatch = useDispatch();
     function leave(){
@@ -291,8 +292,10 @@ function ChessActions(props: InitProps){
                 {mobile() && <Button className="mr-2" onClick={history}>View History</Button>}
                 <Button className="" onClick={leave}>Concede</Button>
             </> || <>
-                <Link to="/"><Button className="mr-2">Home</Button></Link>
+                <Link to="/"><Button className="mr-2">{mobile()? <Home />: "Home"}</Button></Link>
                 <Button className="" onClick={restart}>New Game</Button>
+                {mode == "ai" && <AISelector prefix="VS" suffix="AI" className="ml-2" /> }
+                <Link to="/profile"><Button className="ml-2">{mobile()? <Users />: "Profile"}</Button></Link>
             </>}
         </div>
     )

@@ -240,8 +240,12 @@ const chessSlice = createSlice({
     },
     endGame: (state, action) => {
       const concede = !!action.payload;
-      const activeName = state.activePlayer == 1? "Black": "White";
-      state.message = concede? activeName+" concedes.": activeName+" left.";
+      if(concede && state.mode == "ai"){
+        state.message = "You have conceded.";
+      }else{
+        const activeName = state.activePlayer == 1? "Black": "White";
+        state.message = concede? activeName+" concedes.": activeName+" left.";
+      }
       state.activePlayer = -1;
     },
     selectPiece: (state, action) => {

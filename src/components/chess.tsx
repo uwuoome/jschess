@@ -9,6 +9,7 @@ import MoveHistory from "./chess-history";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { Spinner } from '@/components/ui/shadcn-io/spinner';
+import { Progress } from "@/components/ui/progress"
 import { aiPlayerTitle } from "@/lib/utils";
 
 export type InitProps = {
@@ -25,7 +26,6 @@ export type ChessProps = InitProps & {
 export const AiWorker = new Worker(new URL("@/workers/ai-worker.ts", import.meta.url), {
   type: "module",
 });
-console.log("AI worker init");
 
 const DEBUG = 0;
 
@@ -228,6 +228,7 @@ function ChessInfo(){
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const mode  = useSelector((state: RootState) => state.chess.mode);
     const aiLevel  = useSelector((state: RootState) => state.chess.aiLevel);
+    const aiProgress = useSelector((state: RootState) => state.chess.aiProgress);
     const dispatch = useDispatch();
 
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
@@ -260,9 +261,11 @@ function ChessInfo(){
             {message  && <div className="m-1 pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
                 {message}
                 
-                {message.indexOf("AI is searching") != -1 && <Spinner key='infinite' variant='infinite' className="float-right" />}
+                {message.indexOf("AI is searching") != -1 && <>
+                    <Spinner key='infinite' variant='infinite' className="float-right" />
+                </>}
             </div>}
-
+            {message.indexOf("AI is searching") != -1 && <Progress value={aiProgress} />}   
         </div>
     );
 }

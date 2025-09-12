@@ -1,5 +1,5 @@
 import { AiWorker } from "@/components/chess";
-import { nextTurn, opponentMove } from "@/store/chessSlice";
+import { nextTurn, opponentMove, setAIProgress } from "@/store/chessSlice";
 
 const chessStorageMiddleware = (store: any) => (next: any) => (action: any) => {
     
@@ -43,7 +43,12 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
         if(state.chess.mode == "ai" && state.chess.activePlayer == 1){
             const searchDepth = (store.getState().chess.aiLevel || 1) * 2; 
             const start = Date.now();
+            store.dispatch(setAIProgress(0));
             AiWorker.onmessage = (e) => {
+                if(e.data.progress){
+                    store.dispatch(setAIProgress(e.data.progress));
+                    return;
+                }
                 const aiMove = e.data.move;
                 const seconds = ((Date.now() - start) / 1000).toFixed(3);
                 console.log(`${seconds} seconds to find move at search depth ${searchDepth} with js minmax ai.`);

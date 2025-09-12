@@ -2,7 +2,6 @@ import { algebraicNotation, getCheckState, getPlayerMovesAvailable} from "./ches
 
 const EMPTY = " ";
 
-
 function getTable(pieceName: string){
     // table values measured in centipawns, or 100th of a pawn's value
     // from black's perspective
@@ -124,7 +123,7 @@ function nextBoardState(board: string[], from: number, to: number){
 
 const algebraic = (move: {from: number, to: number}) => algebraicNotation(move.from)+algebraicNotation(move.to);
 
-function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
+function alphaBetaSearch(isBlack: boolean, board: string[], depth: number, onStep?: Function){
     function quiesce(alpha: number, beta: number, board: string[], isBlack: boolean){
         const moves = getPlayerMovesAvailable(isBlack, board);
         const boardValue = weighBoard(isBlack, board, moves.length > 0);
@@ -188,7 +187,7 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
     const moves = getPlayerMovesAvailable(isBlack, board);
     if(moves.length == 0) return null; // game is a stalemate or checkmate  
 
-    moves.forEach(mp => {                                           // for each piece that can be moved
+    moves.forEach((mp, i) => {                                      // for each piece that can be moved
         mp.to.forEach(to => {                                       // for each tile that it can move to
             const nextBoard = nextBoardState(board, mp.from, to);
             const boardValue = -alphaBeta(-beta, -alpha, nextBoard, depth-1, !isBlack); 
@@ -201,6 +200,7 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number){
             }
             console.log(algebraic({from: mp.from, to}), boardValue);
         }); 
+        onStep && onStep(i, moves.length, mp.from);
     });
     return bestMove;
 }
@@ -220,29 +220,38 @@ function piecesOnBoard(board: string[]){
 /**
  * Synchronous search for AI move
  */
-export function getNextMove(isBlack: boolean, board: string[], searchDepth: number = 4): string{
+export function getNextMove(isBlack: boolean, board: string[], searchDepth: number = 4, onStep?: Function): string{
     const depth = Math.floor(searchDepth);
-    if(depth < 1 || depth > 10){
-        throw new Error(`Invalid search depth: ${depth}. Must be between 1 and 12.`);
+    if(depth < 1 || depth > 8){
+        throw new Error(`Invalid search depth: ${depth}. Must be between 1 and 8.`);
     }
     console.log("search depth", searchDepth);
-    const bestMove = alphaBetaSearch(isBlack, board, searchDepth);
+    const bestMove = alphaBetaSearch(isBlack, board, searchDepth, onStep);
     if(bestMove == null) return "N/A"; // stalemate shouldn't occcur because should have been checked prior
     return algebraicNotation(bestMove.from)+algebraicNotation(bestMove.to);
 }
 
 /**
  * Aysnchronous search for AI move. Uses synchronous search but can be aborted.
+ * @param board
+ * @param searchDepth number of plies to search between 1 and 8
+ * @param minDelay minimum delay before completing the turn
+ * @param signal abort signal for when game is left
+ * @param onStep callback after each piece has been evaluated for progress bar.
  */
-export async function getAiMove(board: string[], searchDepth: number = 4, minDelay: number = 800, signal?: AbortSignal): 
+export async function getAiMove(board: string[], searchDepth: number=4, minDelay: number=800, signal?: AbortSignal, onStep?: Function): 
                                     Promise<string> {
   const delay = new Promise<void>(resolve => setTimeout(resolve, minDelay));
   let aiMove: string | null = null;
 
+  function onPieceEval(i: number, n: number, _pieceIndex: number){
+    onStep && onStep(i, n); 
+  }
+
   const aiPromise = new Promise<void>((resolve) => {
     setTimeout(() => {
-      aiMove = getNextMove(true, board, searchDepth); 
-      resolve();
+        aiMove = getNextMove(true, board, searchDepth, onPieceEval); 
+        resolve();
     }, 0);
   });
 

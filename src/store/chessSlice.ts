@@ -19,7 +19,8 @@ export type GameState = {
     target: null | number;                // target tile to move to after selection 
     movesMade: string[];                  // log of moves made in algebraic notation, for replay or history browsing
     message: string;                      // message presented to user
-    aiLevel: 1 | 2 | 3 | 4 | 5 | 6;       // ai skill level in the game
+    aiLevel: 1 | 2 | 3;                   // ai skill level in the game
+    aiProgress: number;                   // ai search completion progress in percent
     lastMoveHilite: boolean;              // if set higlights move
 }
 export type ChessMove = {
@@ -76,6 +77,7 @@ const initialState: GameState = {
     movesMade: [],
     message: "",
     aiLevel: 2,
+    aiProgress: 0,
     lastMoveHilite: false,                   
 }
 
@@ -285,8 +287,19 @@ const chessSlice = createSlice({
     highlightLastMove: (state, action) => {
       state.lastMoveHilite = (!!action.payload);
     },
+    setAIProgress: (state, action) => {
+      const progress = parseInt(action.payload);
+      if(isNaN(progress)) throw Error("Invalid Progess Value", action.payload);
+      state.aiProgress = Math.min(100, Math.max(0, progress));
+    }
   }
 });
 
-export const { initGame, endGame, selectPiece, movePiece, nextTurn, opponentMove, highlightLastMove} = chessSlice.actions;
+export const { 
+  initGame, endGame, 
+  selectPiece, movePiece, nextTurn, 
+  opponentMove, 
+  highlightLastMove, 
+  setAIProgress
+} = chessSlice.actions;
 export default chessSlice.reducer;

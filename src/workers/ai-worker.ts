@@ -13,9 +13,14 @@ self.onmessage = async (e: MessageEvent) => {
   }
   const board: string[] = e.data.board;
   const depth: number = e.data.depth || 4;
+
   controller = new AbortController();
+
+  function pieceEvaluatedCallback(i:number, n: number){
+    self.postMessage({progress: 100 / n * (i+1)});
+  }
   try{
-    const move = await getAiMove(board, depth, 800, controller.signal);
+    const move = await getAiMove(board, depth, 800, controller.signal, pieceEvaluatedCallback);
     if(!controller.signal.aborted){
       self.postMessage({ move });
     }

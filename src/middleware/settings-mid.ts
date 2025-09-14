@@ -5,7 +5,7 @@ import {
     setAiDifficulty, 
     addFriend, 
     removeFriend, 
-    setPieceStyle, 
+    setPreferredStyle, 
     type SettingsState 
 } from "@/store/settingsSlice";
 
@@ -27,7 +27,7 @@ const settingsMiddleware = (store: any) => (next: any) => (action: any) => {
         setAiDifficulty.type, 
         addFriend.type, 
         removeFriend.type, 
-        setPieceStyle.type];
+        setPreferredStyle.type];
     if(onSaveActions.includes(action.type)){ 
         saveProfile(state.profile);
     }

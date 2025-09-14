@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress"
 import { aiPlayerTitle } from "@/lib/utils";
 import AISelector from "./ai-selector";
 import { Home, Users } from "lucide-react";
+import { generateChessboardPalette } from "@/lib/chess-palette";
 
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
@@ -50,10 +51,12 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
     const lastMoveHilite = useSelector((state: RootState) => state.chess.lastMoveHilite); 
     const pieceStyle = useSelector((state: RootState) => state?.profile?.pieceStyle);
+    const boardStyle = useSelector((state: RootState) => state?.profile?.boardStyle);
+    const hiliteStyle = useSelector((state: RootState) => state?.profile?.hiliteStyle);
     
     const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
-
+    const palette = generateChessboardPalette(boardStyle, hiliteStyle);
 
     function move(index: number){ 
         if(mode != "hotseat" && myPlayerNumber != activePlayer) return;
@@ -113,32 +116,28 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
 
+
     function background(isBlack:boolean, index:number, selected: any = null){
         const size = mobile()? "w-11 h-11": "w-16 h-16";
         const prefix = size+" content-center "; 
         const canMoveTo = selected?.options.includes(index);
-        const hlight = "bg-lime-300" //"bg-gray-200";
-        const hdark = "bg-lime-400" //"bg-gray-500";
-        const light = "bg-gray-300";
-        const dark = "bg-gray-400";
-        
         if(canMoveTo){
-            const bg = isBlack? hlight: hdark; 
+            const bg = isBlack? palette.hlight: palette.hdark; 
             const isSelectedBlack = board[selected.from].toUpperCase() != board[selected.from];
             if(isSelectedBlack){
                 return `${prefix}${bg} border-8 border-solid border-transparent hover:border-black`;
             }
             return `${prefix}${bg} border-8 border-solid border-transparent hover:border-white`;
         }   
-        const border = hilites.has(index) ? " border-8 border-solid border-lime-400": "";
+        const border = hilites.has(index) ? ` border-8 border-solid ${palette.border}`: "";
         const isSelectedBlack = board[index].toUpperCase() != board[index];
         if(index === selected?.from){
             if(! isSelectedBlack){
-                return prefix+` bg-radial from-lime-600 from-20% ${isBlack? hlight: hdark}`;
+                return prefix+` ${palette.rdark} ${isBlack? palette.hlight: palette.hdark}`;
             }
-            return prefix+` bg-radial from-lime-100 from-20% ${isBlack? hlight: hdark}`;
+            return prefix+` ${palette.rlight} ${isBlack? palette.hlight:  palette.hdark}`;
         }
-        return prefix+(isBlack? light: dark)+border;
+        return prefix+(isBlack? palette.light:  palette.dark)+border;
     }
 
 
@@ -157,7 +156,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     //grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] 
     return (
     <div className="max-w-full overflow-auto mx-auto">
-    <div className="grid border-0 border-black w-fit select-none bg-gray-200 font-mono"
+    <div className={`grid border-0 border-black w-fit select-none ${palette.light} font-mono`}
         style={{
             gridTemplateColumns: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
             gridTemplateRows: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,

@@ -8,6 +8,8 @@ export type SettingsState = {
     game: string;
     list: FriendData[];
     pieceStyle: "mono" | "duo";
+    boardStyle: "gray" | "stone";
+    hiliteStyle: string;
 };
 const initialState: SettingsState = {
     myid: "",
@@ -16,6 +18,8 @@ const initialState: SettingsState = {
     ailevel: 1,
     list: [],
     pieceStyle: "mono",
+    boardStyle: "gray",
+    hiliteStyle: "lime",
 };
 
 export const loadSettings = createAsyncThunk(
@@ -69,8 +73,15 @@ const settingsSlice = createSlice({
             const target = action.payload.toLowerCase();
             state.list = state.list.filter((x: FriendData)  => x.handle != target); 
         },
-        setPieceStyle: (state, action) => {
-            state.pieceStyle = action.payload;
+        setPreferredStyle: (state, action) => {
+            const {style, setting} = action.payload;
+            if(style == "piece"){
+                state.pieceStyle = setting;
+            }else if(style == "board"){
+                state.boardStyle = setting;
+            }else if(style == "hilite"){
+                state.hiliteStyle = setting;
+            }
         }
     },
     extraReducers: (builder) => {
@@ -85,5 +96,5 @@ const settingsSlice = createSlice({
     },
 });
 
-export const { setMyID, setPreferredGame, setAiDifficulty, addFriend, removeFriend, setPieceStyle } = settingsSlice.actions;
+export const { setMyID, setPreferredGame, setAiDifficulty, addFriend, removeFriend, setPreferredStyle } = settingsSlice.actions;
 export default settingsSlice.reducer;

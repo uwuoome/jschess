@@ -6,6 +6,7 @@ export type GamePlayer = {
   name: string,                      // player name
   socket: number | null,             // stores socketid for reconnect
   castling: CastlingAvailability,    // if rooks or king has moved to determine if castling is possible
+  time: number;                      // remaining seconds
 }; 
 export type GameState = {
     mode: "network" | "hotseat" | "ai";   // basic game mode / opponent type
@@ -22,6 +23,8 @@ export type GameState = {
     aiLevel: 1 | 2 | 3;                   // ai skill level in the game
     aiProgress: number;                   // ai search completion progress in percent
     lastMoveHilite: boolean;              // if set higlights move
+    turnStart: number;                    // timestamp of when the turn started
+    turnTimeIncrement: number;            // number of seconds added to player's timer after making each move
 }
 export type ChessMove = {
     piece: string;
@@ -62,11 +65,13 @@ const initialState: GameState = {
     players: [{
       name: "Player 1",
       socket: null,
-      castling: 3
+      castling: 3,
+      time: 90*60
     }, {
       name: "Player 2",
       socket: null,
-      castling: 3
+      castling: 3,
+      time: 90*60
     }],
     myPlayer: 0,
     activePlayer: 0,
@@ -78,7 +83,9 @@ const initialState: GameState = {
     message: "",
     aiLevel: 2,
     aiProgress: 0,
-    lastMoveHilite: false,                   
+    lastMoveHilite: false,    
+    turnStart: Date.now(),
+    turnTimeIncrement: 30,               
 }
 
 
@@ -150,6 +157,16 @@ function promotion(player: 0 | 1, piece: string, moveTo: number){
 function endTurn(state: GameState){
   state.selected = null;
   state.target = null;
+  if(state.activePlayer == -1) {
+    throw Error("Can't pass turn with no active player.");
+  }
+  // adjust current player's clock, then start set time for next turn start
+  const elapsed = Math.floor( (Date.now()-state.turnStart) / 1000);
+  const timeLeft = state.players[state.activePlayer].time - elapsed + state.turnTimeIncrement
+  state.players[state.activePlayer].time = timeLeft;
+  state.turnStart = Date.now();
+
+  //toogle active player and increment turn after black
   state.activePlayer ^= 1;
   if(state.activePlayer == 0){
     state.turnNumber += 1;
@@ -295,6 +312,12 @@ const chessSlice = createSlice({
       const progress = parseInt(action.payload);
       if(isNaN(progress)) throw Error("Invalid Progess Value", action.payload);
       state.aiProgress = Math.min(100, Math.max(0, progress));
+    },
+    outOfTime: (state) => {
+      const loser = state.activePlayer == 0? 'White': 'Black';
+      const winner = state.activePlayer == 1? 'White': 'Black';
+      state.message = `${loser} is out of time: ${winner} Wins!`;
+      state.activePlayer = -1;
     }
   }
 });
@@ -304,6 +327,7 @@ export const {
   selectPiece, movePiece, nextTurn, 
   opponentMove, 
   highlightLastMove, 
-  setAIProgress
+  setAIProgress,
+  outOfTime,
 } = chessSlice.actions;
 export default chessSlice.reducer;

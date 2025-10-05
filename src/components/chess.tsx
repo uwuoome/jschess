@@ -14,7 +14,7 @@ import { aiPlayerTitle } from "@/lib/utils";
 import AISelector from "./ai-selector";
 import { Home, Users } from "lucide-react";
 import { generateChessboardPalette } from "@/lib/chess-palette";
-
+import ChessTimer from "./chess-timer";
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
     player: 0 | 1;
@@ -112,7 +112,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     useEffect(() => {
         // Create an artifical delay between players' turns.
         if(target == null) return () => null;
-        const timeout = setTimeout( () => dispatch(nextTurn()), 800 );
+        const timeout = setTimeout( () => {
+            dispatch(nextTurn());
+        }, 800 );
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
 
@@ -156,66 +158,66 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     //grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] 
     return (
     <div className="max-w-full overflow-auto mx-auto">
-    <div className={`grid border-0 border-black w-fit select-none ${palette.light} font-mono`}
-        style={{
-            gridTemplateColumns: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
-            gridTemplateRows: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
-        }}
-    >
-        <div />
-        {files.map((file, i) => (
-        <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
-            {file}
-        </div>
-        ))}
-        <div />
-
-        {ranks.map((rank, rowIndex) => (
-        <React.Fragment key={`row-${rowIndex}`}>
-            <div className="flex items-center justify-center text-xs font-semibold p-1">
-            {rank}
+        <div className={`grid border-0 border-black w-fit select-none ${palette.light} font-mono`}
+            style={{
+                gridTemplateColumns: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
+                gridTemplateRows: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
+            }}
+        >
+            <div />
+            {files.map((file, i) => (
+            <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
+                {file}
             </div>
+            ))}
+            <div />
 
-            {files.map((_, colIndex) => {
-            const row = isFlipped ? 7 - rowIndex: rowIndex;
-            const col = isFlipped ? 7 - colIndex : colIndex;
-            const index = row * 8 + col;
-            const isBackgroundBlack = (row + col) % 2 === 0;
-
-            return (
-                <div style={{ position: "relative" }} key={index}>
-                    {DEBUG && (
-                    <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
-                        {index}
-                    </div>
-                    ) || ""}
-                    
-                    <div className={`${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
-                    {board[index] !== " " &&
-                        <img src={`/chess/${piece(board[index])}`} className={pieceDisplay(index)} />
-                    }
-                    {pieceStyle == "duo" && board[index] !== " " && 
-                        <img src={`/chess/_${piece(board[index])}`} className={pieceDisplay(index)} style={{
-                            position: "absolute", top: "8px", left: pieceHasOffset(index)? "8px": 0 
-                        }} />
-                    }
-                    </div>
+            {ranks.map((rank, rowIndex) => (
+            <React.Fragment key={`row-${rowIndex}`}>
+                <div className="flex items-center justify-center text-xs font-semibold p-1">
+                {rank}
                 </div>
-            );
-            })}
-            <div className="flex items-center justify-center text-xs font-semibold p-1">
-            {rank}
+
+                {files.map((_, colIndex) => {
+                const row = isFlipped ? 7 - rowIndex: rowIndex;
+                const col = isFlipped ? 7 - colIndex : colIndex;
+                const index = row * 8 + col;
+                const isBackgroundBlack = (row + col) % 2 === 0;
+
+                return (
+                    <div style={{ position: "relative" }} key={index}>
+                        {DEBUG && (
+                        <div style={{ position: "absolute", top: 0, left: "2px", fontSize: "10px", color: "red" }}>
+                            {index}
+                        </div>
+                        ) || ""}
+                        
+                        <div className={`${background(isBackgroundBlack, index, selected)}`} onClick={() => move(index)}>
+                        {board[index] !== " " &&
+                            <img src={`/chess/${piece(board[index])}`} className={pieceDisplay(index)} />
+                        }
+                        {pieceStyle == "duo" && board[index] !== " " && 
+                            <img src={`/chess/_${piece(board[index])}`} className={pieceDisplay(index)} style={{
+                                position: "absolute", top: "8px", left: pieceHasOffset(index)? "8px": 0 
+                            }} />
+                        }
+                        </div>
+                    </div>
+                );
+                })}
+                <div className="flex items-center justify-center text-xs font-semibold p-1">
+                {rank}
+                </div>
+            </React.Fragment>
+            ))}
+            <div />
+            {files.map((file, i) => (
+            <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
+                {file}
             </div>
-        </React.Fragment>
-        ))}
-        <div />
-        {files.map((file, i) => (
-        <div key={`file-top-${i}`} className="flex items-center justify-center text-xs font-semibold">
-            {file}
+            ))}
+            <div />
         </div>
-        ))}
-        <div />
-    </div>
     </div>
     );
 }
@@ -230,10 +232,11 @@ function ChessInfo(){
     const aiProgress = useSelector((state: RootState) => state.chess.aiProgress);
     const dispatch = useDispatch();
 
+
     const turnClass = activePlayer == 1? 'bg-black text-white': 'text-black bg-white';
     // TODO: sort out leaving and restarting in network mode
     function showLM(){
-     dispatch(highlightLastMove(true));
+        dispatch(highlightLastMove(true));
     }
     function hideLM(){
        dispatch(highlightLastMove(false));
@@ -243,6 +246,9 @@ function ChessInfo(){
             <span className={`m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap ${turnClass}`}>
                 <span className="font-normal">Turn</span> {turnNumber} {activePlayer? "Black": "White"}
             </span>
+            <div className="m-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap inline-block">
+                <ChessTimer className="p-0" />
+            </div>
             {mode == "ai"  &&
                 <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap">
                     <span className="font-normal">VS</span> {aiPlayerTitle(aiLevel)} <span className="font-normal">AI</span>
@@ -254,6 +260,7 @@ function ChessInfo(){
                     <span className="font-normal">Prev: </span>{movesMade[movesMade.length-1]} 
                 </span>
             }
+
             {message  && 
                 <div className="m-1 pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
                 {message}
@@ -301,7 +308,6 @@ function ChessActions(props: InitProps){
 }
 
 export default function Chess(props: ChessProps) {
-    
     return (
     <div className="flex">
         <div>
@@ -313,7 +319,7 @@ export default function Chess(props: ChessProps) {
             <MoveHistory  />
         }
     </div>
-    );
+);
 };
 
 

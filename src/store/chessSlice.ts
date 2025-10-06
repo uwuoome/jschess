@@ -154,14 +154,15 @@ function promotion(player: 0 | 1, piece: string, moveTo: number){
 }
 
 
-function endTurn(state: GameState){
+function endTurn(state: GameState, action?: PayloadAction<any>){
+  if(action?.payload) console.log("end turn payload", action.payload);
   state.selected = null;
   state.target = null;
   if(state.activePlayer == -1) {
     throw Error("Can't pass turn with no active player.");
   }
-  // adjust current player's clock, then start set time for next turn start
-  const elapsed = Math.floor( (Date.now()-state.turnStart) / 1000);
+  // adjust current player's clock, then start set time for next turn startacton
+  const elapsed = action?.payload? action.payload: Math.floor( ( Date.now()-state.turnStart) / 1000);
   const timeLeft = state.players[state.activePlayer].time - elapsed + state.turnTimeIncrement
   state.players[state.activePlayer].time = timeLeft;
   state.turnStart = Date.now();
@@ -250,10 +251,10 @@ const chessSlice = createSlice({
   initialState,
   reducers: {
     initGame: (_state, action) => {
-      const message = action.payload.movesMade? "Restored game in progress. "+(action.payload.message || "")  :"";
+      const message = action.payload.movesMade? "Restored game in progress. " :"";
       const props = {mode: action.payload.mode, myPlayer: action.payload.player, aiLevel: action.payload.aiLevel}
       const args = (action.payload.player == null)? action.payload: props;
-      return { ...initialState, ...args, message};
+      return { ...initialState, ...args, message, turnStart: Date.now()};
     },
     endGame: (state, action) => {
       const concede = !!action.payload;
@@ -318,6 +319,12 @@ const chessSlice = createSlice({
       const winner = state.activePlayer == 1? 'White': 'Black';
       state.message = `${loser} is out of time: ${winner} Wins!`;
       state.activePlayer = -1;
+    },
+    saveChessTimer: (state) => {
+      if(state.activePlayer == -1) return;//being called multiple times
+      const now = Date.now();
+      state.players[state.activePlayer].time -= Math.floor( (now - state.turnStart) / 1000);
+      // external save done through middleware 
     }
   }
 });
@@ -329,5 +336,6 @@ export const {
   highlightLastMove, 
   setAIProgress,
   outOfTime,
+  saveChessTimer,
 } = chessSlice.actions;
 export default chessSlice.reducer;

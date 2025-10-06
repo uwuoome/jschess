@@ -17,10 +17,11 @@ const chessStorageMiddleware = (store: any) => (next: any) => (action: any) => {
 
     const result = next(action);
     const state = store.getState();
+
     if(state.chess.mode == "network"){  // network games don't currently save state, if a player reloads the page the game ends.
         return result;
     }
-    if(action.type == 'game/nextTurn'){
+    if(action.type == 'game/nextTurn' || action.type == 'game/saveChessTimer'){
         localStorage.setItem(`chess_state_${state.chess.mode}`, JSON.stringify(state.chess));
     }else if(action.type == 'game/endGame'){
         // TODO: save result of match?
@@ -53,7 +54,7 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
                 const seconds = ((Date.now() - start) / 1000).toFixed(3);
                 console.log(`${seconds} seconds to find move at search depth ${searchDepth} with js minmax ai.`);
                 store.dispatch(opponentMove(aiMove));
-                store.dispatch(nextTurn());
+                store.dispatch(nextTurn(null));
             };
             AiWorker.onerror = (err) => {
                 console.error("AI worker failed:", err);

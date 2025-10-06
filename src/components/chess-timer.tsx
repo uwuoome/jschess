@@ -1,13 +1,12 @@
 
 import type { RootState } from '@/store';
-import { outOfTime } from '@/store/chessSlice';
-import { useEffect, useRef, useState } from 'react';
+import { outOfTime, saveChessTimer } from '@/store/chessSlice';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 type ChessTimerProps = {
     className?: string;
 };
-
 
 function formattedTime(time: number){
     const minutes =  Math.floor(time / 60);
@@ -52,6 +51,17 @@ function ChessTimer({ className }: ChessTimerProps) {
         timeLeftAtTurnStartRef.current = activePlayerTime;
         tick();
     }, [activePlayerTime,  activePlayer]);
+
+    const saveFinalState = useCallback(() => {
+        dispatch(saveChessTimer());
+    }, [dispatch]);
+
+    useEffect(() => {
+        window.addEventListener('beforeunload', saveFinalState);
+        return () => {
+            window.removeEventListener('beforeunload', saveFinalState);
+        }
+    }, [saveFinalState]); 
 
     return (
         <div className={className+" relative"}>

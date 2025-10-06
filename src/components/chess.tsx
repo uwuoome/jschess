@@ -53,7 +53,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const pieceStyle = useSelector((state: RootState) => state?.profile?.pieceStyle);
     const boardStyle = useSelector((state: RootState) => state?.profile?.boardStyle);
     const hiliteStyle = useSelector((state: RootState) => state?.profile?.hiliteStyle);
-    
+    const turnStart = useSelector((state: RootState) => state?.chess.turnStart);
+
+
     const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
     const palette = generateChessboardPalette(boardStyle, hiliteStyle);
@@ -71,14 +73,17 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const send = () => {
         if(mode != "network") return;
         if(! (sendMessage && selected && target)) return;
-        sendMessage({data: algebraicNotation(selected.from)+algebraicNotation(target)});
+        sendMessage({data: {
+            move: algebraicNotation(selected.from)+algebraicNotation(target),
+            time: Math.round( (Date.now() - turnStart) / 1000)
+        }});
     };
     const receive = () =>{
         if(mode != "network") return;
         if(!currentMessage) return;
         console.log("recieved", currentMessage);
-        dispatch(opponentMove(currentMessage.data));
-        dispatch(nextTurn());
+        dispatch(opponentMove(currentMessage.data.move));
+        dispatch(nextTurn(currentMessage.data.time));
     };
     useEffect(receive, [currentMessage]);
     useEffect(send, [selected, target]);
@@ -110,10 +115,12 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }, []);
 
     useEffect(() => {
-        // Create an artifical delay between players' turns.
         if(target == null) return () => null;
+        // Create an artifical delay between players' turns to display move being made.
+        // But cut the timer off at time of player action.
+        const elapsedTime = Math.round( (Date.now() - turnStart) / 1000); 
         const timeout = setTimeout( () => {
-            dispatch(nextTurn());
+            dispatch(nextTurn(elapsedTime));
         }, 800 );
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
@@ -284,6 +291,7 @@ function ChessActions(props: InitProps){
     function leave(){
         if(! confirm("Are you sure you want to concede?")) return;
         dispatch(endGame(true));
+        // TODO: if network game need to send message to opponent 
     }
     function restart(){
         dispatch(endGame(true));

@@ -82,6 +82,10 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         if(mode != "network") return;
         if(!currentMessage) return;
         console.log("recieved", currentMessage);
+        if(currentMessage.data == "concede"){
+            dispatch(endGame(true));
+            return;
+        }
         dispatch(opponentMove(currentMessage.data.move));
         dispatch(nextTurn(currentMessage.data.time));
     };
@@ -283,7 +287,7 @@ function ChessInfo(){
     );
 }
 
-function ChessActions(props: InitProps){
+function ChessActions(props: ChessProps){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const mode = useSelector((state: RootState) => state.chess.mode);
     const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
@@ -291,7 +295,9 @@ function ChessActions(props: InitProps){
     function leave(){
         if(! confirm("Are you sure you want to concede?")) return;
         dispatch(endGame(true));
-        // TODO: if network game need to send message to opponent 
+        if(props.mode == "network" && props.sendMessage){
+            props.sendMessage({data: "concede"});
+        }
     }
     function restart(){
         dispatch(endGame(true));
@@ -321,7 +327,7 @@ export default function Chess(props: ChessProps) {
         <div>
             <ChessBoard {...props}  />
             <ChessInfo />
-            <ChessActions mode={props.mode} player={props.player} />
+            <ChessActions {...props} />
         </div>
         {window.innerWidth > 1200 &&
             <MoveHistory  />

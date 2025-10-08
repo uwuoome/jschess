@@ -10,6 +10,7 @@ export type SettingsState = {
     pieceStyle: "mono" | "duo";
     boardStyle: "gray" | "stone";
     hiliteStyle: string;
+    timerMode: "standard" | "blitz" | "none";
 };
 const initialState: SettingsState = {
     myid: "",
@@ -20,6 +21,7 @@ const initialState: SettingsState = {
     pieceStyle: "mono",
     boardStyle: "gray",
     hiliteStyle: "lime",
+    timerMode: "standard",
 };
 
 export const loadSettings = createAsyncThunk(
@@ -82,6 +84,9 @@ const settingsSlice = createSlice({
             }else if(style == "hilite"){
                 state.hiliteStyle = setting;
             }
+        },
+        setTimerMode: (state, action) => {
+            state.timerMode = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -96,5 +101,13 @@ const settingsSlice = createSlice({
     },
 });
 
-export const { setMyID, setPreferredGame, setAiDifficulty, addFriend, removeFriend, setPreferredStyle } = settingsSlice.actions;
+export const { 
+    setMyID, 
+    setPreferredGame, 
+    setAiDifficulty, 
+    addFriend, 
+    removeFriend, 
+    setPreferredStyle, 
+    setTimerMode 
+} = settingsSlice.actions;
 export default settingsSlice.reducer;

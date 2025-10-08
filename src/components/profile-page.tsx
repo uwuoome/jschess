@@ -7,7 +7,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
  
-import { setPreferredStyle } from "@/store/settingsSlice";
+import { setPreferredStyle, setTimerMode } from "@/store/settingsSlice";
 import TextClickSelector from "./text-click-selector";
 import AISelector from "./ai-selector";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,14 @@ function ProfilePage(){
         dispatch( setPreferredStyle({style, setting: type}) );
     }
     const groupContainer = cn("p-2 mt-2 border-1 border-r-4 max-w-140", screen.width > 800? "mr-4": "");
+    const timerModes = [
+        {name: "Standard", value: "standard", info: "90 minutes + 30 second increments."},
+        {name: "Blitz", value: "blitz", info: "3 minutes + 5 second increments."},
+        {name: "None", value: "none", info: "Take as much time as you like."}
+    ];
+    function changeTimer(mode: string){
+        dispatch( setTimerMode(mode));
+    }
     return (
     <>
         <div className={groupContainer}>
@@ -63,9 +71,16 @@ function ProfilePage(){
                             <span className={`bg-${color}-400 w-4 h-4 rounded-sm`}></span>
                         </ToggleGroupItem>
                     ))}   
-                </ToggleGroup>   
-                            
+                </ToggleGroup>             
             </div>          
+        </div>
+        <div className={groupContainer+" hidden"}>
+            <h2>Timer</h2>
+            <ToggleGroup type="single" size="sm" variant="outline" className="ml-2 inline" value={myprofile.timerMode}
+                onValueChange={changeTimer}>
+                {timerModes.map((tm) => <ToggleGroupItem key={tm.value} value={tm.value}>{tm.name}</ToggleGroupItem>)}
+            </ToggleGroup>
+            <span className="ml-2">{timerModes.find(m => m.value == myprofile.timerMode)?.info || "N/A"}</span> 
         </div>
         <div className={groupContainer}>
             <Link to="/chess/ai"><Button className="float-right"><Play /></Button></Link>

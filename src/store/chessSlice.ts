@@ -155,7 +155,6 @@ function promotion(player: 0 | 1, piece: string, moveTo: number){
 
 
 function endTurn(state: GameState, action?: PayloadAction<any>){
-  if(action?.payload) console.log("end turn payload", action.payload);
   state.selected = null;
   state.target = null;
   if(state.activePlayer == -1) {

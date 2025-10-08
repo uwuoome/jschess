@@ -15,6 +15,8 @@ import AISelector from "./ai-selector";
 import { Home, Users } from "lucide-react";
 import { generateChessboardPalette } from "@/lib/chess-palette";
 import ChessTimer from "./chess-timer";
+import useSound from "@/hooks/use-sound";
+
 export type InitProps = {
     mode: "hotseat" | "network" | "ai";
     player: 0 | 1;
@@ -59,6 +61,9 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const [hilites, setHilites] = useState(new Set());
     const dispatch = useDispatch();
     const palette = generateChessboardPalette(boardStyle, hiliteStyle);
+    const { play: playMyMove } = useSound('myMove');
+    const { play: playOpMove } = useSound('opMove');
+    const { play: playNotify } = useSound('notify');
 
     function move(index: number){ 
         if(mode != "hotseat" && myPlayerNumber != activePlayer) return;
@@ -81,13 +86,12 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     const receive = () =>{
         if(mode != "network") return;
         if(!currentMessage) return;
-        console.log("recieved", currentMessage);
         if(currentMessage.data == "concede"){
             dispatch(endGame(true));
-            return;
+        }else{
+            dispatch(opponentMove(currentMessage.data.move));
+            dispatch(nextTurn(currentMessage.data.time));
         }
-        dispatch(opponentMove(currentMessage.data.move));
-        dispatch(nextTurn(currentMessage.data.time));
     };
     useEffect(receive, [currentMessage]);
     useEffect(send, [selected, target]);
@@ -98,6 +102,8 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         const lastMove = movesMade[movesMade.length-1];
         const from = parseAlgebraic(lastMove.substring(0, 2));
         const to = parseAlgebraic(lastMove.substring(2, 4));
+        // board has already updated so cant tell if capture right now
+        activePlayer? playOpMove(): playMyMove();
         setHilites(new Set([from, to]));
         const timeout = setTimeout(setHilites.bind(null, new Set()), 1200);
         return () => clearTimeout(timeout); 
@@ -128,6 +134,12 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         }, 800 );
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
+
+    useEffect(() => {
+        if(activePlayer == -1){
+            playNotify(); // make a sound when the game is over
+        }
+    }, [activePlayer]);
 
 
     function background(isBlack:boolean, index:number, selected: any = null){
@@ -333,7 +345,7 @@ export default function Chess(props: ChessProps) {
             <MoveHistory  />
         }
     </div>
-);
+    );
 };
 
 

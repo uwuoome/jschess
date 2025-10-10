@@ -265,7 +265,7 @@ function ChessInfo(){
        dispatch(highlightLastMove(false));
     }
     return (
-        <div className="mt-2 p-2 border-solid border-0 border-gray-500 w-136 max-w-screen font-bold select-none whitespace-nowrap">
+        <div className="mt-2 p-2 border-solid border-0 border-gray-500 w-136 max-w-screen font-bold select-none  bg-gray-300">
             <span className={`m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap ${turnClass}`}>
                 <span className="font-normal">Turn</span> {turnNumber} {activePlayer? "Black": "White"}
             </span>
@@ -273,26 +273,26 @@ function ChessInfo(){
                 <ChessTimer className="p-0" />
             </div>
             {mode == "ai"  &&
-                <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap">
+                <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap bg-white text-black">
                     <span className="font-normal">VS</span> {aiPlayerTitle(aiLevel)} <span className="font-normal">AI</span>
                 </span>
             }
             {movesMade.length > 0 && 
-                <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm hover:bg-lime-400 whitespace-nowrap" 
+                <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm hover:bg-lime-400 whitespace-nowrap bg-white text-black" 
                         onMouseOver={showLM} onMouseOut={hideLM}>
                     <span className="font-normal">Prev: </span>{movesMade[movesMade.length-1]} 
                 </span>
             }
 
             {message  && 
-                <div className="m-1 pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
-                {message}
-                {message.indexOf("AI is searching") != -1 && <>
-                    <Spinner key='infinite' variant='infinite' className="float-right" />
-                    <div className="bg-gray-50 mb-1 border-1 border-r-2"> 
-                        {message.indexOf("AI is searching") != -1 && <Progress value={aiProgress} />} 
-                    </div>   
-                </>}
+                <div className="pl-2 pr-2 m-1 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 font-bold text-white">
+                    {message}
+                    {message.indexOf("AI is searching") != -1 && <>
+                        <Spinner key='infinite' variant='infinite' className="float-right" />
+                        <div className="bg-gray-50 mb-1 border-1 border-r-2"> 
+                            {message.indexOf("AI is searching") != -1 && <Progress value={aiProgress} />} 
+                        </div>   
+                    </>}
                 </div>
             }
         </div>

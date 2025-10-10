@@ -7,6 +7,7 @@ import {
     removeFriend, 
     setPreferredStyle, 
     setTimerMode,
+    setLastOpponent,
     type SettingsState 
 } from "@/store/settingsSlice";
 
@@ -29,7 +30,8 @@ const settingsMiddleware = (store: any) => (next: any) => (action: any) => {
         addFriend.type, 
         removeFriend.type, 
         setPreferredStyle.type,
-        setTimerMode.type
+        setTimerMode.type,
+        setLastOpponent.type,
     ];
     if(onSaveActions.includes(action.type)){ 
         saveProfile(state.profile);

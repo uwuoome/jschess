@@ -215,10 +215,22 @@ p, h1, h2, h3{
   margin-bottom: 8px;
 }
 
-a{
+main a{
   color: blue;
 }
 
 .sidebar a{
+  color: black;
+}
+
+#root{
+  background: #222233 !important;
+}
+
+[data-slot='sidebar-trigger']{
+  color: white;
+}
+
+[data-slot='sidebar-trigger']:hover{
   color: black;
 }

@@ -11,6 +11,7 @@ export type SettingsState = {
     boardStyle: "gray" | "stone";
     hiliteStyle: string;
     timerMode: "standard" | "blitz" | "none";
+    lastOpponent: string;
 };
 const initialState: SettingsState = {
     myid: "",
@@ -22,6 +23,7 @@ const initialState: SettingsState = {
     boardStyle: "gray",
     hiliteStyle: "lime",
     timerMode: "standard",
+    lastOpponent: "",
 };
 
 export const loadSettings = createAsyncThunk(
@@ -87,7 +89,10 @@ const settingsSlice = createSlice({
         },
         setTimerMode: (state, action) => {
             state.timerMode = action.payload;
-        }
+        },
+        setLastOpponent: (state, action) => {
+            state.lastOpponent = action.payload;
+        },        
     },
     extraReducers: (builder) => {
         // When the 'loadSettings' thunk successfully completes
@@ -108,6 +113,7 @@ export const {
     addFriend, 
     removeFriend, 
     setPreferredStyle, 
-    setTimerMode 
+    setTimerMode,
+    setLastOpponent, 
 } = settingsSlice.actions;
 export default settingsSlice.reducer;

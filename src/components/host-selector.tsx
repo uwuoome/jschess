@@ -42,6 +42,7 @@ export default function HostSelector({onJoin}: Props) {
         );
     }
     return (
+    <div className="text-black inline-block">
     <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
@@ -68,5 +69,6 @@ export default function HostSelector({onJoin}: Props) {
         </Command>
         </PopoverContent>
     </Popover>
+    </div>
     );
 }

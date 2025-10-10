@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from "react-redux";
-import Friends from "./friends";
 import { type RootState } from "@/store";
 
 import {
@@ -23,9 +22,10 @@ function ProfilePage(){
     const dispatch = useDispatch();
     // TODO: Elo, History
     function changeStyle(style: string, type: string){
+        if(style == null) return;  // prevent deselection
         dispatch( setPreferredStyle({style, setting: type}) );
     }
-    const groupContainer = cn("p-2 mt-2 border-1 border-r-4 max-w-140", screen.width > 800? "mr-4": "");
+    const groupContainer = cn("p-2 mt-2 border-b-1 max-w-140", screen.width > 800? "mr-4": "");
     const timerModes = [
         {name: "Standard", value: "standard", info: "90 minutes + 30 second increments."},
         {name: "Blitz", value: "blitz", info: "3 minutes + 5 second increments."},
@@ -36,38 +36,38 @@ function ProfilePage(){
     }
     return (
     <>
-        <div className={groupContainer}>
-            <h2>Preferences</h2>
+        <div className={groupContainer+" border-t-1"}>
+            <h2 className="text-blue-200">Preferences</h2>
             <div className="mb-2">
-                <span>Piece Style: </span>
-                <ToggleGroup type="single" size="sm" variant="outline" value={myprofile.pieceStyle} 
+                <span  className="text-blue-200">Piece Style: </span>
+                <ToggleGroup type="single" size="sm" variant="outline" value={myprofile.pieceStyle}
                         className="ml-2 inline" onValueChange={changeStyle.bind(null, "piece")}>
-                    <ToggleGroupItem value="mono" aria-label="Toggle Monochrome" >
+                    <ToggleGroupItem value="mono" aria-label="Toggle Monochrome"  className="bg-gray-500">
                         Monochrome
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="duo" aria-label="Toggle Outlined">
+                    <ToggleGroupItem value="duo" aria-label="Toggle Outlined" className="bg-gray-500">
                         Outlined
                     </ToggleGroupItem>
                 </ToggleGroup>
             </div>
             <div className="mb-2">
-                <span>Board Style: </span>
+                <span className="text-blue-200">Board Style: </span>
                 <ToggleGroup type="single" size="sm" variant="outline" value={myprofile.boardStyle}  className="ml-2 inline" 
                         onValueChange={changeStyle.bind(null, "board")}>
-                    <ToggleGroupItem value="gray" aria-label="Toggle Gray Board" >
+                    <ToggleGroupItem value="gray" aria-label="Toggle Gray Board"  className="bg-gray-500">
                         Gray
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="stone" aria-label="Toggle Stone Board">
+                    <ToggleGroupItem value="stone" aria-label="Toggle Stone Board"  className="bg-gray-500">
                         Stone
                     </ToggleGroupItem>
                 </ToggleGroup>  
             </div>
             <div>
-                <span>Highlight: </span>
+                <span className="text-blue-200">Highlight: </span>
                 <ToggleGroup type="single" size="sm" variant="outline" value={myprofile.hiliteStyle}  className="ml-2 inline" 
                     onValueChange={changeStyle.bind(null, "hilite")}>
                     {hilites.map(color => (
-                        <ToggleGroupItem key={color} value={color} aria-label={`Toggle ${color} highlight`} >
+                        <ToggleGroupItem key={color} value={color} aria-label={`Toggle ${color} highlight`} className="bg-gray-500">
                             <span className={`bg-${color}-400 w-4 h-4 rounded-sm`}></span>
                         </ToggleGroupItem>
                     ))}   
@@ -75,29 +75,33 @@ function ProfilePage(){
             </div>          
         </div>
         <div className={groupContainer+" hidden"}>
-            <h2>Timer</h2>
+            <h2 className="text-blue-200">Timer</h2>
             <ToggleGroup type="single" size="sm" variant="outline" className="ml-2 inline" value={myprofile.timerMode}
                 onValueChange={changeTimer}>
                 {timerModes.map((tm) => <ToggleGroupItem key={tm.value} value={tm.value}>{tm.name}</ToggleGroupItem>)}
             </ToggleGroup>
-            <span className="ml-2">{timerModes.find(m => m.value == myprofile.timerMode)?.info || "N/A"}</span> 
+            <span className="ml-2 text-blue-200">{timerModes.find(m => m.value == myprofile.timerMode)?.info || "N/A"}</span> 
         </div>
         <div className={groupContainer}>
             <Link to="/chess/ai"><Button className="float-right"><Play /></Button></Link>
-            <h2>AI Play</h2>
-            <p>AI Difficulty Level: &nbsp; <AISelector />
+            <h2 className="text-blue-200">AI Play</h2>
+            <p><span className="text-blue-200">AI Difficulty Level: &nbsp; </span><AISelector />
             </p>
         </div>
         <div className={groupContainer}>
             <Link to="/chess/p2p"><Button className="float-right"><Play /></Button></Link>
-            <h2>Network Play</h2>
+            <h2 className="text-blue-200">Network Play</h2>
             {myprofile.mytoken? <>
-                <p>Handle: <b>{name}</b></p>
-                <p>Token: <TextClickSelector text={myprofile.mytoken} type="code" /></p>
+                <p className="text-blue-200">Your handle: <b>{name}</b></p>
+                <p>
+                    <span className="text-blue-200">Token: </span>
+                    <TextClickSelector text={myprofile.mytoken} type="code" />
+                </p>
+                <p className="text-blue-200">Last opponent: <b>{myprofile.lastOpponent || "N/A"}</b></p>
             </>:
-                <p>You do not have a handle or token required for network play set up yet.</p>
+                <p className="text-blue-200">You do not have a handle or token required for network play set up yet.</p>
             }
-            <Friends />
+            {/*<Friends />*/}
         </div>
     </>
     );

@@ -65,7 +65,7 @@ function ChessTimer({ className }: ChessTimerProps) {
 
     return (
         <div className={className+" relative"}>
-            <div className="inline-block pl-1 pr-1">
+            <div className="inline-block bg-white text-black pl-1 pr-1 rounded-l-sm">
                 {activePlayer < 1? timerState: inactiveFormattedTime}
             </div>
             <div className="inline-block bg-black text-white pl-1 pr-1 rounded-r-sm">

@@ -2,7 +2,7 @@ import {Link} from "react-router-dom";
 
 export default function AboutPage(){
     return (
-        <div className="p-2">
+        <div className="p-2 max-w-[900px] text-blue-200">
             <h1>About</h1>
             <h2>Overview</h2>
             <p>

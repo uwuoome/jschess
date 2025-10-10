@@ -5,6 +5,7 @@ import { piece } from "./chess";
 import { Button } from "./ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { parseMove } from "@/lib/chess-logic";
+import { chunk } from "@/lib/utils";
 
 type HistoricBoardProps = {
     board: string[];
@@ -66,11 +67,6 @@ export default function MoveHistory() {
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const myPlayerNumber = useSelector((state: RootState) => state.chess.myPlayer);
     const history = useSelector((state: RootState) => state.chess.movesMade);
-    function turnName(moveIndex: number){
-        const t = Math.floor(moveIndex / 2)+1;
-        const c = moveIndex % 2 == 1? "Black": "White";
-        return t+" "+c;
-    }
     function goto(moveIndex: number){
         if(selected == moveIndex){
             setSelected(-1);
@@ -92,16 +88,20 @@ export default function MoveHistory() {
     const board = reconstructBoard(history, selected+1);
     return (
         <>
-            <ScrollArea className={`w-40 ml-2 mr-0 border-gray-200 border-2 select-none max-h-150 font-mono ${rightBorder()}`}>
-                <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Turn</div>
-                <div className="w-1/2 inline-block text-center font-bold bg-gray-200">Move</div>
-                {history.map((mm, i) => (
-                    <div key={i} className={`no-select cursor-pointer border-b-1 ${hilite(i)}`} onClick={goto.bind(null, i)}>
-                        <div className="w-1/2 inline-block pl-2 text-xs">
-                            {turnName(i)}
+            <ScrollArea className={`w-40 ml-2 mr-0 bg-white border-gray-200 border-2 select-none max-h-150 font-mono ${rightBorder()}`}>
+                <div className="w-1/5 inline-block text-center font-bold bg-gray-200">&nbsp;</div>
+                <div className="w-2/5 inline-block text-center font-bold bg-gray-200">White</div>
+                <div className="w-2/5 inline-block text-center font-bold bg-gray-200">Black</div>
+                {chunk(history, 2).map((mm: [string, string], i: number) => (
+                    <div key={i} className={`no-select cursor-pointer border-b-1`}>
+                        <div className="w-1/5 inline-block pl-2 text-bold">
+                            {i+1}:
                         </div>
-                        <div className="w-1/2 inline-block pl- text-center">
-                            {mm}
+                        <div className={`w-2/5 inline-block pl- text-center ${hilite(i*2)}`} onClick={goto.bind(null, i*2)}>
+                            {mm[0] || ""}
+                        </div>
+                        <div className={`w-2/5 inline-block pl- text-center ${hilite(i*2+1)}`} onClick={goto.bind(null, i*2+1)}>
+                            {mm[1] || ""}
                         </div>
                     </div>
                 ))}
@@ -192,7 +192,7 @@ function HistoricInfo(props: HistoricInfoProps){
         console.log(board);
     }
     return (
-        <div className="p-2 border-b-2 border-r-2 border-gray-200 w-135.5 h-14 font-bold select-none">
+        <div className="p-2 border-b-2 border-r-2 border-gray-200 w-135.5 h-14 font-bold select-none bg-white">
             <span className={`m-1 pl-2 pr-2 border-solid border-1 border-gray-500 rounded-sm ${turnClass}`}>
                 Previous Board State
             </span>

@@ -19,13 +19,13 @@ function TextClickSelector(props:TextClickSelectorProps) {
     //style={{ border: '1px solid #ccc', padding: '10px', cursor: 'pointer' }}
     if(props.type == "code"){
         return (
-            <code ref={textRef} onClick={handleDivClick} className="cursor-pointer border-1 text-console bg-gray-50 p-1">
+            <code ref={textRef} onClick={handleDivClick} className="cursor-pointer border-1 text-console bg-gray-50 p-1 text-xs">
                 {props.text}    
             </code>
         );
     }
     return (
-        <div ref={textRef} onClick={handleDivClick} className="cursor-pointer border-1 text-console bg-gray-50 pl-2 p-1">
+        <div ref={textRef} onClick={handleDivClick} className="cursor-pointer border-1 text-console bg-gray-50 pl-2 p-1 text-xs">
             {props.text}    
         </div>
     );

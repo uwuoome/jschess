@@ -63,7 +63,7 @@ export function AppSidebar() {
                 return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className={isActive ? "bg-muted text-primary" : ""}>
+                    <a href={item.url} className={isActive ? "bg-muted" : ""}>
                       <item.icon />
                       <span>{item.title}</span>
                     </a>

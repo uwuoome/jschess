@@ -234,3 +234,10 @@ main a{
 [data-slot='sidebar-trigger']:hover{
   color: black;
 }
+
+
+/* prevent swipe navigation and page reload gesture */
+body {
+    -webkit-overflow-scrolling: auto; 
+    overscroll-behavior: contain;
+}

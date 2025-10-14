@@ -2,8 +2,6 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 
 
-
-
 export default function Home(){
     return (
         <div className="p-2 select-none">
@@ -28,14 +26,8 @@ export default function Home(){
             <div className="m-2 p-1 border-l-8 border-yellow-300 bg-white max-w-[380px] rounded-r-lg border-solid border-1">
                 Play against AI, friends or randos.
             </div>
-            {/*
-            <div className="m-2 p-1 border-l-8 border-lime-400 bg-white max-w-[380px] rounded-r-lg">
-                
-            </div>
-            bg-gradient-to-r from-lime-400 from-10%  to-emerald-500 to-90%
-            */}
             <div className="flex border-1 rounded-md p-2 relative content-center max-w-[400px] bg-yellow-300">
-                <div className="absolute top-1 text-sm flex-center">Select a game mode</div>
+                <div className="absolute top-1 text-sm flex-center">Select a game mode:</div>
                 <Link to="/chess/ai"  className="m-1 mt-6 grow  w-1/3">
                     <Button className="w-full">
                         AI
@@ -52,7 +44,15 @@ export default function Home(){
                     </Button>
                 </Link>
             </div>
-
+            <div className="absolute bottom-1 text-gray-300 w-full flex justify-between pr-4">
+                <span>2025 Michael Grundel</span>
+                <span> - </span>
+                <Link to="/about">About</Link> 
+                <span> - </span>
+                <Link to="https://github.com/uwuoome/jschess" target="_blank">
+                    Source <img src="/github-mark-white.svg" alt="Github" className="w-6 h-6 inline" />
+                </Link>
+            </div>
 
         </div>
     );

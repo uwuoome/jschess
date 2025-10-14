@@ -144,17 +144,18 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
 
     function background(isBlack:boolean, index:number, selected: any = null){
         const size = mobile()? "w-11 h-11": "w-16 h-16";
+        const bwidth = mobile()? "border-5": "border-8";
         const prefix = size+" content-center "; 
         const canMoveTo = selected?.options.includes(index);
         if(canMoveTo){
             const bg = isBlack? palette.hlight: palette.hdark; 
             const isSelectedBlack = board[selected.from].toUpperCase() != board[selected.from];
             if(isSelectedBlack){
-                return `${prefix}${bg} border-8 border-solid border-transparent hover:border-black`;
+                return `${prefix}${bg} ${bwidth} border-solid border-transparent hover:border-black`;
             }
-            return `${prefix}${bg} border-8 border-solid border-transparent hover:border-white`;
+            return `${prefix}${bg} ${bwidth} border-solid border-transparent hover:border-white`;
         }   
-        const border = hilites.has(index) ? ` border-8 border-solid ${palette.border}`: "";
+        const border = hilites.has(index) ? ` ${bwidth} border-solid ${palette.border}`: "";
         const isSelectedBlack = board[index].toUpperCase() != board[index];
         if(index === selected?.from){
             if(! isSelectedBlack){
@@ -171,7 +172,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }
     function pieceDisplay(index: number){
         const scale = () => mobile()? "w-8 h-8": "w-12 h-12";
-        const offset = (index: number) =>  pieceHasOffset(index)? "ml-0": "ml-2";
+        const offset = (index: number) =>  pieceHasOffset(index)? "ml-0": mobile()? "ml-1.5": "ml-2";
         return `${scale()} ${offset(index)}`;
     }
 

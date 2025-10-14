@@ -8,11 +8,11 @@ export function generateChessboardPalette(board: "gray" | "stone", hilite: strin
             border: 'border-red-400',
         },
         amber: {
-            light: 'bg-amber-300',
-            dark: 'bg-amber-400',
-            rlight: 'bg-radial from-amber-100',
-            rdark: 'bg-radial from-amber-600',
-            border: 'border-amber-400',
+            light: 'bg-yellow-300',
+            dark: 'bg-yellow-400',
+            rlight: 'bg-radial from-yellow-100',
+            rdark: 'bg-radial from-yellow-600',
+            border: 'border-yellow-400',
         },
         lime: {
             light: 'bg-lime-300',

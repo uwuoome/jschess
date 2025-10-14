@@ -32,7 +32,7 @@ const pwa = VitePWA({
     name: 'JsChess',
     short_name: 'JsChess',
     description: 'Open source chess implementation with AI and network play.',
-    theme_color: '#ffffff',
+    theme_color: '#222233',
     icons: [
       {
         src: '/pwa-192x192.png',

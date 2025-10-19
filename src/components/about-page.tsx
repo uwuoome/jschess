@@ -137,6 +137,7 @@ export default function AboutPage(){
                 socket ID and then play directly against one another, thus reducing server load and latency that would be involed in 
                 mediating games.
             </p>
+            {/*
             <h3>Elo Rating System</h3>
             <p>
                 The Elo rating system is a method for calculating the relative skill levels of players in zero-sum games such as chess 
@@ -148,6 +149,7 @@ export default function AboutPage(){
                 points greater than their opponent's is expected to score 64%; if the difference is 200 points, then the expected score 
                 for the stronger player is 76% (<a href="https://en.wikipedia.org/wiki/Elo_rating_system" target="_blank">Wikipedia</a>).
             </p>
+            */}
             <code className="pl-2 pr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 text-white">
                 components/p2p-game.ts 
             </code>           

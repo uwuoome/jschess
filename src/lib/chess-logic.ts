@@ -362,8 +362,9 @@ export function getCheckState(irBlack: boolean, board: string[], flipped: boolea
         const newCheckFrom = pieceThatCanTake(irBlack, newBoard, flipped, nextKingIndex);
         return newCheckFrom == -1;
     });
-    // TODO: test for stalemate
     if(canTakePieceToRemoveCheck) return 1; 
+    //TODO: need to test if piece can come between king and attacker
+
     // no piece can effectively capture the opponent's piece causing the check, so look if we can move our king
     const adjacentTiles = openAdjacent(irBlack, kingIndex, board);
     if(adjacentTiles.length == 0) return 2;                    // in check with no adjacent free tiles.   
@@ -392,7 +393,6 @@ export function getPlayerMovesAvailable(isBlack: boolean, board: string[]): Piec
     }).filter(r => r?.to?.length > 0);
 }
 
-// this could be where the problem is
 function playerHasAnyMovesAvailable(isBlack: boolean, board: string[]): boolean{
     const pieceCodes = isBlack? "prnbkq": "PRNBKQ";
     const pieceIndices = board.reduce((acc, cur, i: number) => {

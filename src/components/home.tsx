@@ -44,7 +44,7 @@ export default function Home(){
                     </Button>
                 </Link>
             </div>
-            <div className="absolute bottom-1 text-gray-300 w-full flex justify-between pr-4">
+            <div className="absolute bottom-1 text-gray-300 w-full flex justify-between pr-4 max-w-100">
                 <span>2025 Michael Grundel</span>
                 <span> - </span>
                 <Link to="/about">About</Link> 

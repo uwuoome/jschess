@@ -260,7 +260,6 @@ const chessSlice = createSlice({
         aiLevel: action.payload.aiLevel,
         aiWasm: action.payload.aiWasm
       };
-      console.log("initgame", action.payload.aiWasm)
       const args = (action.payload.player == null)? action.payload: props;
       return { ...initialState, ...args, message, turnStart: Date.now()};
     },

@@ -121,7 +121,8 @@ function nextBoardState(board: string[], from: number, to: number){
     return nextBoard;
 }
 
-//const algebraic = (move: {from: number, to: number}) => algebraicNotation(move.from)+algebraicNotation(move.to);
+//@ts-ignore
+const algebraic = (move: {from: number, to: number}) => algebraicNotation(move.from)+algebraicNotation(move.to);
 
 function alphaBetaSearch(isBlack: boolean, board: string[], depth: number, onStep?: Function){
     function quiesce(alpha: number, beta: number, board: string[], isBlack: boolean){

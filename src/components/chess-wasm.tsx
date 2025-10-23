@@ -12,7 +12,7 @@ function ChessWasm(props: ChessProps){
 		AiWorker.postMessage({action: "loadWasm"});
 		AiWorker.onmessage = (e) => {
 			if(e.data.wasm == null) return;
-        	console.log(e.data.message);
+        	//console.log(e.data.message);
 			setIsReady(true);
         };
 		return () => {}

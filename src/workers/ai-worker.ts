@@ -34,7 +34,8 @@ async function getWasmAiMove(board: string[], searchDepth: number=4, minDelay: n
 	return aiMove;
 }
 
-function test(mod: WasmModule){
+// @ts-ignore
+function _test(mod: WasmModule){
 	const boardData = [
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', 'k',
 		' ', ' ', ' ', ' ', 'R', ' ', ' ', ' ',
@@ -63,9 +64,8 @@ async function loadWasm(_e: MessageEvent){
 	wasmStarted = true;
 	Module().then( (mod: WasmModule) => {
 		if (wasm != null)  return;
-		console.log("module loaded", mod);
 		wasm = mod;
-		self.postMessage({wasm: true, message: test(mod)});
+		self.postMessage({wasm: true});
 	});
 }
 

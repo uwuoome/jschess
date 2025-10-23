@@ -1,8 +1,9 @@
-import { Home, /*Joystick,*/ PencilRuler, Users } from "lucide-react"
+import { Home,  PencilRuler,  Settings } from "lucide-react"
 import WhiteRook from '@/assets/WR.svg?react';
 import WhiteKnight from '@/assets/WN.svg?react';
-import WhiteBishop from '@/assets/WB.svg?react';
+import JavaScript from '@/assets/JS.svg?react';
 import WebAssembly from '@/assets/WA.svg?react';
+import GitHub from '@/assets/GitHub.svg?react';
 
 import {
   Sidebar,
@@ -22,35 +23,34 @@ const items = [{
     url: "/",
     icon: Home,
   }, {
-    title: "Profile & Settings",
-    url: "/profile",
-    icon: Users,
- /* }, {
-    title: "Rock Paper Scissors",
-    url: "/rps",
-    icon: Joystick,
-  */
-  }, {
-    title: "P2P Chess",
-    url: "/chess/p2p",
-    icon: WhiteRook,
-  }, {
-    title: "Hotseat Chess",
-    url: "/chess/hotseat",
-    icon: WhiteBishop,      
-  },  {
-    title: "Javascript AI Chess",
+    title: "Play: JavaScript AI",
     url: "/chess/ai",
-    icon: WhiteKnight,      
+    icon: JavaScript,      
   },  {
-    title: "Web Assembly AI Chess",
+    title: "Play: Web Assembly AI",
     url: "/chess/ai-wasm",
     icon: WebAssembly
+  }, {
+    title: "Play: Peer to Peer",
+    url: "/chess/p2p",
+    icon: WhiteKnight,
+  }, {
+    title: "Play: Hotseat Mode",
+    url: "/chess/hotseat",
+    icon: WhiteRook,      
+  },  {
+    title: "Settings",
+    url: "/profile",
+    icon: Settings,
   }, {
     title: "About",
     url: "/about",
     icon: PencilRuler,
-  },
+  }, {
+    title: "Source",
+    url: "https://github.com/uwuoome/jschess",
+    icon: GitHub,
+  }
 ];
  
 export function AppSidebar() {
@@ -60,7 +60,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {

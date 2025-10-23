@@ -44,16 +44,13 @@ export default function Home(){
                     </Button>
                 </Link>
             </div>
-            <div className="absolute bottom-1 text-gray-300 w-full flex justify-between pr-4 max-w-100">
-                <span>2025 Michael Grundel</span>
-                <span> - </span>
+            <div className="absolute bottom-1 text-gray-300 w-full flex pr-4 max-w-100">
                 <Link to="/about">About</Link> 
-                <span> - </span>
+                <span>&nbsp; - &nbsp;</span>
                 <Link to="https://github.com/uwuoome/jschess" target="_blank">
                     Source <img src="/github-mark-white.svg" alt="Github" className="w-6 h-6 inline" />
                 </Link>
             </div>
-
         </div>
     );
 }

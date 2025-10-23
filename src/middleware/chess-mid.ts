@@ -57,14 +57,14 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
                 }
                 const aiMove = e.data.move;
                 const seconds = ((Date.now() - start) / 1000).toFixed(3);
-                console.log(`${seconds} seconds to find move at search depth ${searchDepth} with js minmax ai.`);
+                const aiType = state.chess.aiWasm? "wasm": "js";
+                console.log(`${seconds} seconds to find move at search depth ${searchDepth} with ${aiType} minmax ai.`);
                 store.dispatch(opponentMove(aiMove));
                 store.dispatch(nextTurn({elapsed: null}));
             };
             AiWorker.onerror = (err) => {
                 console.error("AI worker failed:", err);
             };
-            console.log("chess middleware using wasm", state.chess.aiWasm, state.chess );
             AiWorker.postMessage({action: "search", wasm: state.chess.aiWasm, board: state.chess.board, depth: searchDepth });
         }
     }

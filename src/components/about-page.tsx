@@ -96,6 +96,13 @@ export default function AboutPage(){
                 The web worker also sends updates periodically, signaling each time a piece has 
                 been evaluated allowing for a progress bar to be displayed to the player.
             </p>
+            <h3>Web Assembly</h3>
+            <p>
+                As Chess MinMax in JavaScript is somewhat slow, I ported the code ported to C++ which was then compiled to WASM,
+                running between 3 and 4 times faster. 
+                The C++ project can be found <Link to="https://github.com/uwuoome/cppchess" target="_blank">here.</Link> The JavaScript AI Worker
+                is responsible for loading and exectuting.
+            </p>
             <code className="pl-2 pr-2 mr-2 border-solid border-1 border-emerald-950 rounded-sm bg-emerald-800 text-white">
                 lib/chess-ai.ts 
             </code>

@@ -22,6 +22,7 @@ export type GameState = {
     message: string;                      // message presented to user
     aiLevel: 1 | 2 | 3;                   // ai skill level in the game
     aiProgress: number;                   // ai search completion progress in percent
+    aiWasm: boolean;                      
     lastMoveHilite: boolean;              // if set higlights move
     turnStart: number;                    // timestamp of when the turn started
     turnTimeIncrement: number;            // number of seconds added to player's timer after making each move
@@ -33,7 +34,6 @@ export type ChessMove = {
 };
 
 export type CastlingAvailability = 0 | 1 | 2 | 3; // none, left only, right only, both
-
 
 
 const initialBoard = [
@@ -83,6 +83,7 @@ const initialState: GameState = {
     message: "",
     aiLevel: 2,
     aiProgress: 0,
+    aiWasm: false,
     lastMoveHilite: false,    
     turnStart: Date.now(),
     turnTimeIncrement: 30,               
@@ -153,7 +154,6 @@ function promotion(player: 0 | 1, piece: string, moveTo: number){
   return piece;
 }
 
-
 function endTurn(state: GameState, action?: PayloadAction<any>){
   state.selected = null;
   state.target = null;
@@ -161,9 +161,11 @@ function endTurn(state: GameState, action?: PayloadAction<any>){
     throw Error("Can't pass turn with no active player.");
   }
   // adjust current player's clock, then start set time for next turn startacton
-  const elapsed = action?.payload? action.payload: Math.floor( ( Date.now()-state.turnStart) / 1000);
-  const timeLeft = state.players[state.activePlayer].time - elapsed + state.turnTimeIncrement
+
+  const elapsed = action?.payload?.elapsed? action.payload.elapsed: Math.floor( ( Date.now()-state.turnStart) / 1000);
+  const timeLeft = state.players[state.activePlayer].time - elapsed + state.turnTimeIncrement;
   state.players[state.activePlayer].time = timeLeft;
+  
   state.turnStart = Date.now();
 
   //toogle active player and increment turn after black
@@ -250,8 +252,15 @@ const chessSlice = createSlice({
   initialState,
   reducers: {
     initGame: (_state, action) => {
-      const message = action.payload.movesMade? "Restored game in progress. " :"";
-      const props = {mode: action.payload.mode, myPlayer: action.payload.player, aiLevel: action.payload.aiLevel}
+      const message = action.payload.movesMade? 
+          action.payload.activePlayer == -1? "This game has ended": "Restored game in progress. " :"";
+      const props = {
+        mode: action.payload.mode, 
+        myPlayer: action.payload.player, 
+        aiLevel: action.payload.aiLevel,
+        aiWasm: action.payload.aiWasm
+      };
+      console.log("initgame", action.payload.aiWasm)
       const args = (action.payload.player == null)? action.payload: props;
       return { ...initialState, ...args, message, turnStart: Date.now()};
     },

@@ -26,6 +26,7 @@ export type ChessProps = InitProps & {
     sendMessage?: (msg: WebRTCMessage) => void;// network transmit only for network mode
     currentMessage?: WebRTCMessage | null;     // current message network only
     mobile?: boolean;
+    aiWasm?: boolean;
 }
 
 export const AiWorker = new Worker(new URL("@/workers/ai-worker.ts", import.meta.url), {
@@ -42,8 +43,7 @@ export function piece(code: string){
 
 const mobile = () =>  window.innerWidth < 600;
 
-function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
-    
+function ChessBoard({mode, player, sendMessage, currentMessage, aiWasm}: ChessProps){
     const myPlayerNumber = useSelector((state: RootState) => state.chess.myPlayer);
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const board = useSelector((state: RootState) => state.chess.board);
@@ -90,7 +90,8 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
             dispatch(endGame(true));
         }else{
             dispatch(opponentMove(currentMessage.data.move));
-            dispatch(nextTurn(currentMessage.data.time));
+
+            dispatch(nextTurn({elapsed: currentMessage.data.time}));
         }
     };
     useEffect(receive, [currentMessage]);
@@ -121,7 +122,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     }, [lastMoveHilite]);
 
     useEffect(() => {
-        dispatch(initGame({mode, player, aiLevel}));
+        dispatch(initGame({mode, player, aiLevel, aiWasm}));
     }, []);
 
     useEffect(() => {
@@ -130,7 +131,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
         // But cut the timer off at time of player action.
         const elapsedTime = Math.round( (Date.now() - turnStart) / 1000); 
         const timeout = setTimeout( () => {
-            dispatch(nextTurn(elapsedTime));
+            dispatch(nextTurn({elapsed: elapsedTime}));
         }, 800 );
         return () => clearTimeout(timeout); 
     }, [target, dispatch]);
@@ -182,7 +183,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage}: ChessProps){
     //grid-cols-[auto_repeat(8,_4rem)_auto] grid-rows-[auto_repeat(8,_4rem)_auto] 
     return (
     <div className="max-w-full overflow-auto mx-auto">
-        <div className={`grid border-0 border-black w-fit select-none ${palette.light} font-mono`}
+        <div className={`grid border-0 border-black w-fit select-none ${palette.light} font-mono text-black`}
             style={{
                 gridTemplateColumns: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,
                 gridTemplateRows: `auto repeat(8, minmax(2.5rem, 1fr)) auto`,

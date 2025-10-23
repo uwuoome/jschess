@@ -2,6 +2,7 @@ import { Home, /*Joystick,*/ PencilRuler, Users } from "lucide-react"
 import WhiteRook from '@/assets/WR.svg?react';
 import WhiteKnight from '@/assets/WN.svg?react';
 import WhiteBishop from '@/assets/WB.svg?react';
+import WebAssembly from '@/assets/WA.svg?react';
 
 import {
   Sidebar,
@@ -38,10 +39,14 @@ const items = [{
     url: "/chess/hotseat",
     icon: WhiteBishop,      
   },  {
-    title: "AI Chess",
+    title: "Javascript AI Chess",
     url: "/chess/ai",
     icon: WhiteKnight,      
   },  {
+    title: "Web Assembly AI Chess",
+    url: "/chess/ai-wasm",
+    icon: WebAssembly
+  }, {
     title: "About",
     url: "/about",
     icon: PencilRuler,

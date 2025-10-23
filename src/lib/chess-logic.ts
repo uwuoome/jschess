@@ -180,9 +180,7 @@ export function validIndices(index: number, board: string[], flipped: boolean, c
     const result = ignoringCheckStatus.filter(notMovingIntoCheck);
 
     // check if castling is valid here, and if so add moves to result.
-    if(castling == 0) return result; 
-    if(board.findIndex((p: string) => p == (irBlack? "k" : "K")) == -1) return result;  // no king on board
-    if(code != (irBlack? "k" : "K")) return result;                                     // king not selected
+    if(castling == 0 || code != (irBlack? "k" : "K")) return result;                    // king not selected or castling unavailable
     const home = homeRow(irBlack, flipped)*8;
     const castlingNoCheck = (colIndex: number) => pieceThatCanTake(irBlack, board, flipped, home+colIndex) == -1;
     const noPawnsCheckBlankTiles = (home: number, from: number, to: number) =>{

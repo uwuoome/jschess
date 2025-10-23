@@ -9,6 +9,7 @@ import P2PGame from "@/components/p2p-game";
 import { Provider } from 'react-redux';
 import RockPaperScissors from './components/rock-paper-scissors';
 import Chess from './components/chess';
+import WasmChess from './components/chess-wasm';
 import AboutPage from './components/about-page';
 import ProfilePage from './components/profile-page';
 
@@ -29,6 +30,7 @@ function App() {
               <Route path="/chess/p2p" element={<P2PGame game={Chess} />} />
               <Route path="/chess/hotseat" element={<Chess player={0} mode="hotseat" />} />
               <Route path="/chess/ai" element={<Chess player={0} mode="ai" />} />
+              <Route path="/chess/ai-wasm" element={<WasmChess player={0} mode="ai" />} />
               <Route path="/about" element={<AboutPage />} />
             </Routes>
           </main>

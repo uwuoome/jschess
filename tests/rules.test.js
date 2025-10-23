@@ -47,7 +47,7 @@ describe('Pawn', () => {
         const board = blankBoard();
         board[alg("d2")] = "p";
         store.dispatch(initGame({board}));
-        store.dispatch(nextTurn());
+        store.dispatch(nextTurn({elapsed: 0}));
         store.dispatch(selectPiece(alg("d2")));
         store.dispatch(movePiece(alg("d1")));
         const result = store.getState().chess.board[alg("d1")];
@@ -221,7 +221,7 @@ describe('Check', () => {
         store.dispatch(initGame({board}));
         store.dispatch(selectPiece(alg("h4")));
         store.dispatch(movePiece(alg("g6")));  
-        store.dispatch(nextTurn());
+        store.dispatch(nextTurn({elapsed: 0}));
         // white has has just placed black into double check
         const nextBoard = store.getState().chess.board;
         // can't move pawn to take knight because rook checks king

@@ -121,7 +121,7 @@ function nextBoardState(board: string[], from: number, to: number){
     return nextBoard;
 }
 
-const algebraic = (move: {from: number, to: number}) => algebraicNotation(move.from)+algebraicNotation(move.to);
+//const algebraic = (move: {from: number, to: number}) => algebraicNotation(move.from)+algebraicNotation(move.to);
 
 function alphaBetaSearch(isBlack: boolean, board: string[], depth: number, onStep?: Function){
     function quiesce(alpha: number, beta: number, board: string[], isBlack: boolean){
@@ -132,8 +132,8 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number, onSte
             alpha = boardValue;
         }
         const isCapture = (i: number) => isBlack? "pnbrqk".includes(board[i]): "PNBRQK".includes(board[i]);
-        for(let key in moves){
-            let mp = moves[key];
+        for(let k=0; k<moves.length; k++){
+            let mp = moves[k];
             for(let i=0; i<mp.to.length; i++){
                 if(isCapture(mp.to[i])){                                        // evaluate sequence of capture until done 
                     const nextBoard = nextBoardState(board, mp.from, mp.to[i]);
@@ -160,8 +160,8 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number, onSte
             throw Error("Invalid Check State for when no moves are available: "+checkState);
         }
         // TODO: check for insufficient material
-        for(let key in moves){
-            let mp = moves[key];
+        for(let k=0; k<moves.length; k++){
+            let mp = moves[k];
             for(let i=0; i<mp.to.length; i++){
                 const nextBoard = nextBoardState(board, mp.from, mp.to[i]);
                 const score = -alphaBeta(-beta, -alpha, nextBoard, depth-1, !isBlack);
@@ -198,7 +198,7 @@ function alphaBetaSearch(isBlack: boolean, board: string[], depth: number, onSte
             if(boardValue > alpha){
                 alpha = boardValue;
             }
-            console.log(algebraic({from: mp.from, to}), boardValue);
+            //console.log(algebraic({from: mp.from, to}), boardValue);
         }); 
         onStep && onStep(i, moves.length, mp.from);
     });

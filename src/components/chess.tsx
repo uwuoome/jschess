@@ -1,7 +1,7 @@
 import type { WebRTCMessage } from "@/hooks/use-p2p";
 import { algebraicNotation, parseAlgebraic } from "@/lib/chess-logic";
 import type { RootState } from "@/store";
-import { initGame, endGame, movePiece, nextTurn, opponentMove, selectPiece, highlightLastMove } from "@/store/chessSlice";
+import { initGame, endGame, movePiece, nextTurn, selectPiece, highlightLastMove, setNetworkGameMode, opponentMove } from "@/store/chessSlice";
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,7 +14,7 @@ import { aiPlayerTitle } from "@/lib/utils";
 import AISelector from "./ai-selector";
 import { Home, Users } from "lucide-react";
 import { generateChessboardPalette } from "@/lib/chess-palette";
-import ChessTimer from "./chess-timer";
+import ChessTimer  from "./chess-timer";
 import useSound from "@/hooks/use-sound";
 
 export type InitProps = {
@@ -55,6 +55,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage, aiWasm}: ChessPr
     const pieceStyle = useSelector((state: RootState) => state?.profile?.pieceStyle);
     const boardStyle = useSelector((state: RootState) => state?.profile?.boardStyle);
     const hiliteStyle = useSelector((state: RootState) => state?.profile?.hiliteStyle);
+    const timerMode = useSelector((state: RootState) => state?.profile?.timerMode);
     const turnStart = useSelector((state: RootState) => state?.chess.turnStart);
 
 
@@ -79,6 +80,7 @@ function ChessBoard({mode, player, sendMessage, currentMessage, aiWasm}: ChessPr
         if(mode != "network") return;
         if(! (sendMessage && selected && target)) return;
         sendMessage({data: {
+            action: "move",
             move: algebraicNotation(selected.from)+algebraicNotation(target),
             time: Math.round( (Date.now() - turnStart) / 1000)
         }});
@@ -86,11 +88,13 @@ function ChessBoard({mode, player, sendMessage, currentMessage, aiWasm}: ChessPr
     const receive = () =>{
         if(mode != "network") return;
         if(!currentMessage) return;
-        if(currentMessage.data == "concede"){
+        if(currentMessage.data.action == "init" && myPlayerNumber == 1){ 
+            // init to match game inititators settings if different
+            dispatch(setNetworkGameMode({timerMode: currentMessage.data.timerMode}));
+        }else if(currentMessage.data.action == "concede"){
             dispatch(endGame(true));
-        }else{
+        }else if(currentMessage.data.action == "move"){
             dispatch(opponentMove(currentMessage.data.move));
-
             dispatch(nextTurn({elapsed: currentMessage.data.time}));
         }
     };
@@ -122,7 +126,10 @@ function ChessBoard({mode, player, sendMessage, currentMessage, aiWasm}: ChessPr
     }, [lastMoveHilite]);
 
     useEffect(() => {
-        dispatch(initGame({mode, player, aiLevel, aiWasm}));
+        dispatch(initGame({mode, player, aiLevel, aiWasm, timerMode}));
+        if(mode == "network" && myPlayerNumber == 0 && sendMessage){ // init network game
+            sendMessage({data: {action: "init", timerMode}});  
+        }
     }, []);
 
     useEffect(() => {
@@ -253,6 +260,7 @@ function ChessInfo(){
     const message = useSelector((state: RootState) => state.chess.message);
     const movesMade  = useSelector((state: RootState) => state.chess.movesMade);
     const mode  = useSelector((state: RootState) => state.chess.mode);
+    const timer  = useSelector((state: RootState) => state.chess.timer);
     const aiLevel  = useSelector((state: RootState) => state.chess.aiLevel);
     const aiProgress = useSelector((state: RootState) => state.chess.aiProgress);
     const dispatch = useDispatch();
@@ -272,7 +280,7 @@ function ChessInfo(){
                 <span className="font-normal">Turn</span> {turnNumber} {activePlayer? "Black": "White"}
             </span>
             <div className="m-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap inline-block">
-                <ChessTimer className="p-0" />
+                <ChessTimer className="p-0" type={timer} />
             </div>
             {mode == "ai"  &&
                 <span className="m-1 pl-1 pr-1 border-solid border-1 border-gray-500 rounded-sm whitespace-nowrap bg-white text-black">
@@ -305,17 +313,18 @@ function ChessActions(props: ChessProps){
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const mode = useSelector((state: RootState) => state.chess.mode);
     const aiLevel = useSelector((state: RootState) => state?.profile?.ailevel || 2);
+    const timerMode = useSelector((state: RootState) => state?.profile?.timerMode || "none");
     const dispatch = useDispatch();
     function leave(){
         if(! confirm("Are you sure you want to concede?")) return;
         dispatch(endGame(true));
         if(props.mode == "network" && props.sendMessage){
-            props.sendMessage({data: "concede"});
+            props.sendMessage({data: {action: "concede"}});
         }
     }
     function restart(){
         dispatch(endGame(true));
-        dispatch(initGame({...props, aiLevel}));
+        dispatch(initGame({...props, aiLevel, timerMode}));
     }
     function history(){
         alert("TODO: Show move history for mobile");

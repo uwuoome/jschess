@@ -4,8 +4,11 @@ import { outOfTime, saveChessTimer } from '@/store/chessSlice';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+
+export type TimerType = "standard" | "blitz" | "bullet" | "none";
 type ChessTimerProps = {
     className?: string;
+    type: TimerType;
 };
 
 function formattedTime(time: number){
@@ -14,7 +17,7 @@ function formattedTime(time: number){
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-function ChessTimer({ className }: ChessTimerProps) {
+function ChessTimer({ className, type }: ChessTimerProps) {
     const activePlayer = useSelector((state: RootState) => state.chess.activePlayer);
     const players = useSelector((state: RootState) => state.chess.players);
     const dispatch = useDispatch();
@@ -38,7 +41,7 @@ function ChessTimer({ className }: ChessTimerProps) {
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
-        if(activePlayer == -1) return; // don't set an interval on game over
+        if(type == "none" || activePlayer == -1) return;
         interval = setInterval(tick, 1000);
         return () => {
             if(interval) clearInterval(interval);
@@ -46,7 +49,7 @@ function ChessTimer({ className }: ChessTimerProps) {
     }, [activePlayer]);
 
     useEffect(() => {       // on turn change
-        if(activePlayer == -1) return;
+        if(type == "none" || activePlayer == -1) return;
         lastStartRef.current = Date.now();
         timeLeftAtTurnStartRef.current = activePlayerTime;
         tick();
@@ -62,17 +65,21 @@ function ChessTimer({ className }: ChessTimerProps) {
             window.removeEventListener('beforeunload', saveFinalState);
         }
     }, [saveFinalState]); 
-
-    return (
-        <div className={className+" relative"}>
-            <div className="inline-block bg-white text-black pl-1 pr-1 rounded-l-sm">
-                {activePlayer < 1? timerState: inactiveFormattedTime}
-            </div>
-            <div className="inline-block bg-black text-white pl-1 pr-1 rounded-r-sm">
-                {activePlayer > 0? timerState: inactiveFormattedTime}
-            </div>
+    
+    if(type == "none") return <div className={className+" relative"}>
+        <div className="inline-block bg-white text-black pl-1 pr-1 rounded-sm">
+            No time limit
         </div>
-    );
+    </div>
+    
+    return <div className={className+" relative"}>
+        <div className="inline-block bg-white text-black pl-1 pr-1 rounded-l-sm">
+            {activePlayer < 1? timerState: inactiveFormattedTime}
+        </div>
+        <div className="inline-block bg-black text-white pl-1 pr-1 rounded-r-sm">
+            {activePlayer > 0? timerState: inactiveFormattedTime}
+        </div>
+    </div>;
 };
 
  export default ChessTimer;

@@ -1,3 +1,4 @@
+import type { TimerType } from "@/components/chess-timer";
 import { algebraicMove, getCheckState, parseMove, validIndices } from "@/lib/chess-logic";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
@@ -24,8 +25,8 @@ export type GameState = {
     aiProgress: number;                   // ai search completion progress in percent
     aiWasm: boolean;                      
     lastMoveHilite: boolean;              // if set higlights move
+    timer: TimerType;                     // the type of timer
     turnStart: number;                    // timestamp of when the turn started
-    turnTimeIncrement: number;            // number of seconds added to player's timer after making each move
 }
 export type ChessMove = {
     piece: string;
@@ -84,9 +85,9 @@ const initialState: GameState = {
     aiLevel: 2,
     aiProgress: 0,
     aiWasm: false,
-    lastMoveHilite: false,    
-    turnStart: Date.now(),
-    turnTimeIncrement: 30,               
+    lastMoveHilite: false, 
+    timer: "standard",   
+    turnStart: Date.now(),            
 }
 
 
@@ -154,6 +155,13 @@ function promotion(player: 0 | 1, piece: string, moveTo: number){
   return piece;
 }
 
+function timerIncrement(timer: TimerType){
+  if(timer == "standard") return 30;
+  if(timer == "blitz") return 5;
+  if(timer == "bullet") return 3;
+  return 0;
+}
+
 function endTurn(state: GameState, action?: PayloadAction<any>){
   state.selected = null;
   state.target = null;
@@ -163,7 +171,7 @@ function endTurn(state: GameState, action?: PayloadAction<any>){
   // adjust current player's clock, then start set time for next turn startacton
 
   const elapsed = action?.payload?.elapsed? action.payload.elapsed: Math.floor( ( Date.now()-state.turnStart) / 1000);
-  const timeLeft = state.players[state.activePlayer].time - elapsed + state.turnTimeIncrement;
+  const timeLeft = state.players[state.activePlayer].time - elapsed + timerIncrement(state.timer);
   state.players[state.activePlayer].time = timeLeft;
   
   state.turnStart = Date.now();
@@ -247,6 +255,24 @@ function handleOpponentMove(state: GameState, action: PayloadAction<string>) {
   state.movesMade.push(algebraicMove(from, to));
 }
 
+function initPlayerTimers(timerMode: TimerType, gameState: GameState){
+    gameState.players = [ // create a deep copy of players so we can modify the time.
+      { ...gameState.players[0] }, 
+      { ...gameState.players[1] }
+    ];
+    if(timerMode == "standard"){
+      gameState.players[0].time = 90 * 60;
+      gameState.players[1].time = 90 * 60;
+    }else if(timerMode == "bullet"){
+      gameState.players[0].time = 30;
+      gameState.players[1].time = 30;
+    }else if(timerMode == "blitz"){
+      gameState.players[0].time = 180;
+      gameState.players[1].time = 180;
+    }
+    return gameState;
+}
+
 const chessSlice = createSlice({
   name: 'game',
   initialState,
@@ -254,14 +280,25 @@ const chessSlice = createSlice({
     initGame: (_state, action) => {
       const message = action.payload.movesMade? 
           action.payload.activePlayer == -1? "This game has ended": "Restored game in progress. " :"";
+
+      const isReloadedGame = (action.payload.player == null);
       const props = {
         mode: action.payload.mode, 
         myPlayer: action.payload.player, 
         aiLevel: action.payload.aiLevel,
-        aiWasm: action.payload.aiWasm
+        aiWasm: action.payload.aiWasm,
+        timer: action.payload.timerMode
       };
-      const args = (action.payload.player == null)? action.payload: props;
-      return { ...initialState, ...args, message, turnStart: Date.now()};
+      const args = isReloadedGame? action.payload: props;
+      const result = { ...initialState, ...args, message, turnStart: Date.now()};
+      if(isReloadedGame){
+        return result;
+      }
+      // new games need to set up appropriate timer. this is a messy way to do it
+      if(action.payload.timerMode == "none" || action.payload.timerMode == "standard"){
+          return result;
+      }
+      return initPlayerTimers(action.payload.timerMode, result);
     },
     endGame: (state, action) => {
       const concede = !!action.payload;
@@ -332,6 +369,16 @@ const chessSlice = createSlice({
       const now = Date.now();
       state.players[state.activePlayer].time -= Math.floor( (now - state.turnStart) / 1000);
       // external save done through middleware 
+    },
+    setNetworkGameMode: (state, action) => { // updates game settings to match initiator when beginnning network game
+      if(state.mode != "network"){
+        throw Error("Attempting to set network game settings in non-network game mode ("+state.mode+")");
+      }
+      if(state.timer != action.payload.timerMode){
+          const timerMode = action.payload.timerMode || "none";
+          state.message = `Initiator has selected ${timerMode == "none"? "no": timerMode} timer.`;
+          return initPlayerTimers(timerMode, state);
+      }
     }
   }
 });
@@ -344,5 +391,6 @@ export const {
   setAIProgress,
   outOfTime,
   saveChessTimer,
+  setNetworkGameMode,
 } = chessSlice.actions;
 export default chessSlice.reducer;

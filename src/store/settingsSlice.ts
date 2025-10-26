@@ -1,3 +1,4 @@
+import type { TimerType } from '@/components/chess-timer';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 export type FriendData = {name: string, handle: string}
@@ -10,7 +11,7 @@ export type SettingsState = {
     pieceStyle: "mono" | "duo";
     boardStyle: "gray" | "stone";
     hiliteStyle: string;
-    timerMode: "standard" | "blitz" | "none";
+    timerMode: TimerType;
     lastOpponent: string;
 };
 const initialState: SettingsState = {

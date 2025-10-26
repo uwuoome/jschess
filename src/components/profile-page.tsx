@@ -14,7 +14,7 @@ import { Button } from "./ui/button";
 import { Play } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const hilites = ["red", "amber", "lime", "cyan", "blue", "slate"];
+const hilites = ["red", "yellow", "lime", "cyan", "blue", "slate"];
 
 function ProfilePage(){
     const myprofile = useSelector((state: RootState) => state.profile);
@@ -29,6 +29,7 @@ function ProfilePage(){
     const timerModes = [
         {name: "Standard", value: "standard", info: "90 minutes + 30 second increments."},
         {name: "Blitz", value: "blitz", info: "3 minutes + 5 second increments."},
+        {name: "Bullet", value: "bullet", info: "30 seconds + 3 second increments."},
         {name: "None", value: "none", info: "Take as much time as you like."}
     ];
     function changeTimer(mode: string){
@@ -74,11 +75,11 @@ function ProfilePage(){
                 </ToggleGroup>             
             </div>          
         </div>
-        <div className={groupContainer+" hidden"}>
+        <div className={groupContainer}>
             <h2 className="text-blue-200">Timer</h2>
             <ToggleGroup type="single" size="sm" variant="outline" className="ml-2 inline" value={myprofile.timerMode}
                 onValueChange={changeTimer}>
-                {timerModes.map((tm) => <ToggleGroupItem key={tm.value} value={tm.value}>{tm.name}</ToggleGroupItem>)}
+                {timerModes.map((tm) => <ToggleGroupItem key={tm.value} value={tm.value} className="bg-gray-500">{tm.name}</ToggleGroupItem>)}
             </ToggleGroup>
             <span className="ml-2 text-blue-200">{timerModes.find(m => m.value == myprofile.timerMode)?.info || "N/A"}</span> 
         </div>

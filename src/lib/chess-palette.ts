@@ -7,11 +7,11 @@ export function generateChessboardPalette(board: "gray" | "stone", hilite: strin
             rdark: 'bg-radial from-red-600',
             border: 'border-red-400',
         },
-        amber: {
-            light: 'bg-yellow-300',
-            dark: 'bg-yellow-400',
-            rlight: 'bg-radial from-yellow-100',
-            rdark: 'bg-radial from-yellow-600',
+        yellow: {
+            light: 'bg-yellow-200',
+            dark: 'bg-yellow-300',
+            rlight: 'bg-radial from-yellow-50',
+            rdark: 'bg-radial from-yellow-400',
             border: 'border-yellow-400',
         },
         lime: {

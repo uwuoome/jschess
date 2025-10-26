@@ -1,12 +1,21 @@
 import { AiWorker } from "@/components/chess";
+import type { TimerType } from "@/components/chess-timer";
 import { nextTurn, opponentMove, setAIProgress } from "@/store/chessSlice";
+
+export function saveKey(mode: string, aiWasm: boolean){
+    if(mode == "ai" && aiWasm){
+        return `chess_state_${mode}_wasm`;
+    }
+    return `chess_state_${mode}`;
+}
 
 const chessStorageMiddleware = (store: any) => (next: any) => (action: any) => {
     
     if(action.type == 'game/initGame'){
         const mode = action.payload?.mode;
+        const wasm = action.payload?.aiWasm;
         if(! mode) throw new Error("Game mode required to initialise Chess");
-        const gameInProgress = localStorage.getItem(`chess_state_${mode}`);
+        const gameInProgress = localStorage.getItem(saveKey(mode, wasm));
         if(gameInProgress){    
             action.payload = typeof gameInProgress == "string"? JSON.parse(gameInProgress): gameInProgress;
             return next(action);
@@ -21,11 +30,15 @@ const chessStorageMiddleware = (store: any) => (next: any) => (action: any) => {
     if(state.chess.mode == "network"){  // network games don't currently save state, if a player reloads the page the game ends.
         return result;
     }
-    if(action.type == 'game/nextTurn' || action.type == 'game/saveChessTimer'){
-        localStorage.setItem(`chess_state_${state.chess.mode}`, JSON.stringify(state.chess));
+
+    if(action.type == 'game/nextTurn'){
+        localStorage.setItem(saveKey(state.chess.mode, state.chess.aiWasm), JSON.stringify(state.chess));
+    }else if(action.type == 'game/saveChessTimer'){ 
+    //      // problem when calling on beforeunload when moving between wasm and non wasm ai
+        //localStorage.setItem(saveKey(state.chess.mode, aiWasm), JSON.stringify(state.chess));
     }else if(action.type == 'game/endGame'){
         // TODO: save result of match?
-        localStorage.removeItem(`chess_state_${state.chess.mode}`);
+        localStorage.removeItem(saveKey(state.chess.mode, state.chess.aiWasm));
     }
     return result;
 }   
@@ -39,12 +52,19 @@ const chessAIMiddleware = (store: any) => (next: any) => (action: any) => {
     const result = next(action);
     const state = store.getState();
     
-    
+    function getSearchDepth(aiLevel: number, timerMode: TimerType){
+        aiLevel ||= 1;
+        if(timerMode == "standard" || timerMode == "none"){
+            return aiLevel * 2;
+        }
+        return aiLevel;
+    }
 
     const aiStarts = action.type == 'game/initGame' &&  state.chess.activePlayer == 1;
     if(action.type == 'game/nextTurn' || aiStarts){
         if(state.chess.mode == "ai" && state.chess.activePlayer == 1){
-            const searchDepth = (store.getState().chess.aiLevel || 1) * 2; 
+            const chessState = store.getState().chess;
+            const searchDepth = getSearchDepth(chessState.aiLevel, chessState.timer);
             const start = Date.now();
             store.dispatch(setAIProgress(0));
             AiWorker.onmessage = (e) => {

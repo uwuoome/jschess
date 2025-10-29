@@ -6,17 +6,13 @@ let controller: AbortController | null = null;
 
 
 export type WasmModule = {
-	abMinMax: (isBlack: boolean, board: any, depth: number, signal: any, callback: (i: number, n: number)=>void) => string;
+	abMinMax: (isBlack: boolean, board: any, depth: number, callback: (i: number, n: number)=>void) => string;
 	Board: any; 
-	AbortSignal: any;
 };
 
 let wasmStarted = false;
 let wasm: WasmModule | null = null;
 
-function pieceEvaluatedCallback(i:number, n: number){
-	self.postMessage({progress: 100 / n * (i+1)});
-}
 
 async function getWasmAiMove(board: string[], searchDepth: number=4, minDelay: number=800, signal: AbortSignal){
 	if(! wasm) return null;
@@ -25,18 +21,16 @@ async function getWasmAiMove(board: string[], searchDepth: number=4, minDelay: n
 	for (let i = 0; i < board.length; i++) {
 		cppBoard.push_back(board[i].charCodeAt(0)); 
 	}
-	const cppSignal = new wasm.AbortSignal();
-	function abortCallback() {
-        cppSignal.aborted = true; 
-        console.log("WASM AbortSignal set to true.");
-    }
-	signal.addEventListener('abort', abortCallback);
 
 	const delay = new Promise<void>(resolve => setTimeout(resolve, minDelay));
 	let aiMove = null;
+	function pieceEvaluatedCallback(i:number, n: number){
+		self.postMessage({progress: 100 / n * (i+1)});
+		return signal.aborted || false;
+	}
 	const aiPromise = new Promise<void>((resolve) => {
 		setTimeout(() => {
-			aiMove = wasm?.abMinMax(true, cppBoard, searchDepth, cppSignal, pieceEvaluatedCallback);
+			aiMove = wasm?.abMinMax(true, cppBoard, searchDepth, pieceEvaluatedCallback);
 			resolve();
 		}, 0);
 	});
@@ -44,8 +38,6 @@ async function getWasmAiMove(board: string[], searchDepth: number=4, minDelay: n
 	await Promise.all([aiPromise, delay]);
 
 	cppBoard.delete();
-	cppSignal.delete();
-	signal.removeEventListener('abort', abortCallback);
 	return aiMove;
 }
 
@@ -69,6 +61,9 @@ async function search(e: MessageEvent){
 	const depth: number = e.data.depth || 4;
 
 	controller = new AbortController();
+	function pieceEvaluatedCallback(i:number, n: number){
+		self.postMessage({progress: 100 / n * (i+1)});
+	}
 
 	let move = null;
 	if(e.data.wasm && wasm != null){ // revert to javascript if Wasm hasnt been loaded yet for some reason
@@ -76,7 +71,7 @@ async function search(e: MessageEvent){
 	}else{
 		move = await getAiMove(board, depth, 800, controller.signal, pieceEvaluatedCallback);
 	}
-	if(!controller.signal.aborted){
+	if(controller?.signal && (!controller.signal.aborted)){
 		self.postMessage({ move });
 	}
 	controller = null;

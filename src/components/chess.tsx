@@ -330,7 +330,7 @@ function ChessActions(props: ChessProps){
         alert("TODO: Show move history for mobile");
     }
     return (
-        <div className={`${mobile()? "absolute bottom-2 right-2": ""}`}>
+        <div className={`${mobile()? "absolute bottom-2 right-2": "mt-2"}`}>
             {activePlayer >= 0 && <>
                 {mobile() && <Button className="mr-2" onClick={history}>View History</Button>}
                 <Button className="" onClick={leave}>Concede</Button>

@@ -25,7 +25,7 @@ function ProfilePage(){
         if(style == null) return;  // prevent deselection
         dispatch( setPreferredStyle({style, setting: type}) );
     }
-    const groupContainer = cn("p-2 mt-2 border-b-1 max-w-140", screen.width > 800? "mr-4": "");
+    const groupContainer = cn("p-2 mt-2 max-w-140", screen.width > 800? "mr-4": "");
     const timerModes = [
         {name: "Standard", value: "standard", info: "90 minutes + 30 second increments."},
         {name: "Blitz", value: "blitz", info: "3 minutes + 5 second increments."},
@@ -37,7 +37,7 @@ function ProfilePage(){
     }
     return (
     <>
-        <div className={groupContainer+" border-t-1"}>
+        <div className={groupContainer}>
             <h2 className="text-blue-200">Preferences</h2>
             <div className="mb-2">
                 <span  className="text-blue-200">Piece Style: </span>
@@ -76,7 +76,10 @@ function ProfilePage(){
             </div>          
         </div>
         <div className={groupContainer}>
-            <h2 className="text-blue-200">Timer</h2>
+            <h2 className="text-blue-200">Preferred Timer</h2>
+            <p className="text-blue-200">The timer to use when initiating a chess game. When joining another player the 
+                game timer is set to what the initiator has selected.
+            </p>
             <ToggleGroup type="single" size="sm" variant="outline" className="ml-2 inline" value={myprofile.timerMode}
                 onValueChange={changeTimer}>
                 {timerModes.map((tm) => <ToggleGroupItem key={tm.value} value={tm.value} className="bg-gray-500">{tm.name}</ToggleGroupItem>)}

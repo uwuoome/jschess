@@ -235,6 +235,12 @@ main a{
   color: black;
 }
 
+button:hover{
+  box-shadow:
+        0 0 5px 3px rgba(191, 219, 254, 0.8), /* Blue glow: 20px blur, 5px spread */
+        /* Secondary, wider glow (optional) */
+        0 0 10px 05px rgba(0, 191, 255, 0.2);
+}
 
 /* prevent swipe navigation and page reload gesture */
 body {

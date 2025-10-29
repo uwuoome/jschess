@@ -89,7 +89,7 @@ export default function MoveHistory() {
     return (
         <>
             <ScrollArea className={`w-40 ml-2 mr-0 bg-white border-gray-200 border-2 select-none max-h-150 font-mono ${rightBorder()}`}>
-                <div className="w-1/5 inline-block text-center font-bold bg-gray-200">&nbsp;</div>
+                <div className="w-1/5 inline-block text-center font-bold bg-gray-200">#</div>
                 <div className="w-2/5 inline-block text-center font-bold bg-gray-200">White</div>
                 <div className="w-2/5 inline-block text-center font-bold bg-gray-200">Black</div>
                 {chunk(history, 2).map((mm: [string, string], i: number) => (

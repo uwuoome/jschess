@@ -1,6 +1,6 @@
 import { getAiMove } from "@/lib/chess-ai";
 // @ts-ignore
-import Module from '../lib/wasm-ai.js'; 
+import initModule from '../lib/wasm-ai.js';
 
 let controller: AbortController | null = null; 
 
@@ -36,20 +36,23 @@ async function getWasmAiMove(board: string[], searchDepth: number=4, minDelay: n
 	});
 
 	await Promise.all([aiPromise, delay]);
-
 	cppBoard.delete();
 	return aiMove;
 }
 
-
-async function loadWasm(_e: MessageEvent){
-	if(wasmStarted) return;
+async function loadWasm(_e: MessageEvent) {
+	if (wasmStarted) return;
 	wasmStarted = true;
-	Module().then( (mod: WasmModule) => {
-		if (wasm != null)  return;
-		wasm = mod;
-		self.postMessage({wasm: true});
+	const mod = await initModule({
+		locateFile: (path: string) => {
+			if (path.endsWith('.wasm')) {
+				return '/wasm.wasm';
+			}
+			return path;
+		},
 	});
+	wasm = mod;
+	self.postMessage({ wasm: true });
 }
 
 async function search(e: MessageEvent){
